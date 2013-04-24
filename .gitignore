@@ -6,4 +6,6 @@
 *.doc
 bin
 miller.c
+*.log
+lib
 

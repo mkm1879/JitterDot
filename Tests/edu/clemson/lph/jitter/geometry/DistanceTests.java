@@ -1,4 +1,4 @@
-package edu.clemson.lph.tests;
+package edu.clemson.lph.jitter.geometry;
 
 import static org.junit.Assert.*;
 
@@ -7,6 +7,7 @@ import org.junit.Test;
 
 import edu.clemson.lph.jitter.geometry.Distance;
 import edu.clemson.lph.jitter.geometry.InvalidCoordinateException;
+import edu.clemson.lph.jitter.logger.Loggers;
 
 public class DistanceTests {
 	private static final double TOLERANCE = 0.0001; // Miles in this case. Using the same math these represent floating point rounding mostly.
@@ -93,6 +94,7 @@ public class DistanceTests {
 			
 			// From ArcGIS Using projection to SC State Plane and Point Distance tool in Anaysis Tools.  
 			// Note that this results in some degree of disagreement but within 1/2 mile even for relatively long distances.
+			// Just empirically found limits when more than the basic loose tolerance of 1/10 mile.
 			assertTrue( Math.abs(Distance.getDistance(34.301147,-81.625323,34.334553,-81.64593) - 2.586296229) < LOOSE_TOLERANCE);
 			assertTrue( Math.abs(Distance.getDistance(34.76376,-80.93566,34.306178,-81.720549) - 54.7614734) < LOOSE_TOLERANCE);
 			assertTrue( Math.abs(Distance.getDistance(34.398907,-81.61113,34.24272,-81.758762) - 13.67940038) < LOOSE_TOLERANCE);
@@ -100,11 +102,11 @@ public class DistanceTests {
 			assertTrue( Math.abs(Distance.getDistance(34.536983,-83.005,34.474952,-81.295981) - 97.60378357) < LOOSE_TOLERANCE);
 			assertTrue( Math.abs(Distance.getDistance(34.349833,-81.987,33.825714,-81.422653) - 48.49247409) < LOOSE_TOLERANCE);
 			assertTrue( Math.abs(Distance.getDistance(34.306178,-81.720549,33.936811,-81.480422) - 28.93655688) < LOOSE_TOLERANCE);
-			assertTrue( Math.abs(Distance.getDistance(34.24272,-81.758762,34.85433,-81.36566) - 47.74497142) < LOOSE_TOLERANCE * 5);
+			assertTrue( Math.abs(Distance.getDistance(34.24272,-81.758762,34.85433,-81.36566) - 47.74497142) < LOOSE_TOLERANCE * 2);
 			assertTrue( Math.abs(Distance.getDistance(34.670167,-81.8395,35.034,-82.533) - 46.7126621) < LOOSE_TOLERANCE);
 			assertTrue( Math.abs(Distance.getDistance(34.474952,-81.295981,34.648878,-80.666574) - 37.83760016) < LOOSE_TOLERANCE);
 			assertTrue( Math.abs(Distance.getDistance(33.825714,-81.422653,34.575833,-80.3415) - 80.65193143) < LOOSE_TOLERANCE);
-			assertTrue( Math.abs(Distance.getDistance(33.936811,-81.480422,34.532089,-81.301201) - 42.2872174) < LOOSE_TOLERANCE * 5);
+			assertTrue( Math.abs(Distance.getDistance(33.936811,-81.480422,34.532089,-81.301201) - 42.2872174) < LOOSE_TOLERANCE * 2);
 			assertTrue( Math.abs(Distance.getDistance(34.85433,-81.36566,34.77198,-80.91467) - 26.26052078) < LOOSE_TOLERANCE);
 			assertTrue( Math.abs(Distance.getDistance(35.034,-82.533,34.710643,-81.119378) - 83.34664313) < LOOSE_TOLERANCE);
 			assertTrue( Math.abs(Distance.getDistance(34.575833,-80.3415,34.351531,-81.560489) - 71.28210877) < LOOSE_TOLERANCE);
@@ -113,8 +115,8 @@ public class DistanceTests {
 			assertTrue( Math.abs(Distance.getDistance(34.300579,-81.682006,34.532167,-80.628833) - 62.23487446) < LOOSE_TOLERANCE);
 			assertTrue( Math.abs(Distance.getDistance(34.55278,-82.94073,35.022848,-82.084167) - 58.50414576) < LOOSE_TOLERANCE);
 			assertTrue( Math.abs(Distance.getDistance(34.76376,-80.93566,33.242394,-80.204648) - 112.92386) < LOOSE_TOLERANCE * 5);
-			assertTrue( Math.abs(Distance.getDistance(34.398907,-81.61113,33.242394,-80.204648) - 113.5530826) < LOOSE_TOLERANCE * 5);
-			assertTrue( Math.abs(Distance.getDistance(34.334553,-81.64593,33.242394,-80.204648) - 111.9821602) < LOOSE_TOLERANCE * 5);
+			assertTrue( Math.abs(Distance.getDistance(34.398907,-81.61113,33.242394,-80.204648) - 113.5530826) < LOOSE_TOLERANCE * 2);
+			assertTrue( Math.abs(Distance.getDistance(34.334553,-81.64593,33.242394,-80.204648) - 111.9821602) < LOOSE_TOLERANCE * 2);
 			assertTrue( Math.abs(Distance.getDistance(34.536983,-83.005,34.01717,-81.8406) - 75.63584576) < LOOSE_TOLERANCE);
 			assertTrue( Math.abs(Distance.getDistance(34.349833,-81.987,34.797001,-81.279381) - 50.76855133) < LOOSE_TOLERANCE);
 			assertTrue( Math.abs(Distance.getDistance(34.306178,-81.720549,34.499013,-80.011036) - 98.55626703) < LOOSE_TOLERANCE);
@@ -123,12 +125,12 @@ public class DistanceTests {
 			assertTrue( Math.abs(Distance.getDistance(34.474952,-81.295981,34.036,-81.9358) - 47.49328164) < LOOSE_TOLERANCE);
 			assertTrue( Math.abs(Distance.getDistance(33.825714,-81.422653,34.69585,-79.76122) - 112.3988205) < LOOSE_TOLERANCE);
 			assertTrue( Math.abs(Distance.getDistance(33.936811,-81.480422,33.702833,-81.344167) - 17.92655351) < LOOSE_TOLERANCE);
-			assertTrue( Math.abs(Distance.getDistance(34.85433,-81.36566,33.75783,-81.41967) - 75.6320878) < LOOSE_TOLERANCE * 5);
+			assertTrue( Math.abs(Distance.getDistance(34.85433,-81.36566,33.75783,-81.41967) - 75.6320878) < LOOSE_TOLERANCE * 3);
 			assertTrue( Math.abs(Distance.getDistance(35.034,-82.533,34.329658,-80.492198) - 125.9338578) < LOOSE_TOLERANCE);
 			assertTrue( Math.abs(Distance.getDistance(34.648878,-80.666574,34.364836,-79.56654) - 65.74575615) < LOOSE_TOLERANCE);
-			assertTrue( Math.abs(Distance.getDistance(34.575833,-80.3415,33.652667,-81.104833) - 77.21134188) < LOOSE_TOLERANCE * 5);
-			assertTrue( Math.abs(Distance.getDistance(34.532089,-81.301201,33.28622,-80.905713) - 88.80946978) < LOOSE_TOLERANCE * 5);
-			assertTrue( Math.abs(Distance.getDistance(34.77198,-80.91467,33.283333,-80.903) - 102.5896458) < LOOSE_TOLERANCE * 5);
+			assertTrue( Math.abs(Distance.getDistance(34.575833,-80.3415,33.652667,-81.104833) - 77.21134188) < LOOSE_TOLERANCE * 2);
+			assertTrue( Math.abs(Distance.getDistance(34.532089,-81.301201,33.28622,-80.905713) - 88.80946978) < LOOSE_TOLERANCE * 4);
+			assertTrue( Math.abs(Distance.getDistance(34.77198,-80.91467,33.283333,-80.903) - 102.5896458) < LOOSE_TOLERANCE * 4);
 			// The following were selected from close farms.  Tighten up the limits a little to .02 to .05 Miles
 			// Would be interesting research to figure out which pairs tend to deviate more than others. Does not seem to be totally proportional.
 			assertTrue( Math.abs(Distance.getDistance(33.8335,-81.52033,33.692352,-81.519611) - 9.726182968) < LOOSE_TOLERANCE / 2.0 );
@@ -151,11 +153,8 @@ public class DistanceTests {
 			assertTrue( Math.abs(Distance.getDistance(33.80433,-81.5315,33.68293,-81.454178) - 9.475753652) < LOOSE_TOLERANCE / 2.0);
 			assertTrue( Math.abs(Distance.getDistance(34.516083,-82.896583,34.5797,-82.93885) - 5.003606849) < LOOSE_TOLERANCE / 5.0);
 			assertTrue( Math.abs(Distance.getDistance(33.809212,-81.432039,33.7873,-81.3003) - 7.727723422) < LOOSE_TOLERANCE / 5.0);
-
-
 		} catch (InvalidCoordinateException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			Loggers.error( e.getStackTrace() );
 			assertTrue(false);
 		}
 	}

@@ -1,4 +1,4 @@
-package edu.clemson.lph.tests;
+package edu.clemson.lph.jitter.geometry;
 
 import static org.junit.Assert.*;
 
@@ -72,7 +72,7 @@ public class MillerProjectionTests {
 			assertTrue( Math.abs(aCoords[1] - dEast) < TOLERANCE  );	
 		} catch (InvalidCoordinateException e) {
 			e.printStackTrace();
-			assertTrue( false );
+			fail( e.getMessage() );
 		}
 	}
 	

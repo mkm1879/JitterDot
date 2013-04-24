@@ -18,9 +18,8 @@ public class InvalidCoordinateException extends Exception {
 			return "Invalid coordinate " + dCoord + " for variable " + sVarName;
 		}
 		else {
-			return "Invalid coordinate";
-		}
-			
+			return "Invalid coordinate " + dCoord;
+		}			
 	}
 	
 }
