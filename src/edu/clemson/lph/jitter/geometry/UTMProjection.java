@@ -31,6 +31,12 @@ public class UTMProjection {
 		trans = ctFactory.createTransform(WGS84, tgtCRS);
 	}
 	
+	public void setUTMZone( int iZone ) throws InvalidUTMZoneException {
+		String sEPSG = zoneToUTM_EPSG( iZone );
+		tgtCRS = createCRS( sEPSG );
+		trans = ctFactory.createTransform(WGS84, tgtCRS);		
+	}
+	
 	public double[] project( double dLatDegrees, double dLongDegrees ) throws InvalidCoordinateException {
 		if( dLatDegrees < -90.0 || dLatDegrees > 90.0 ) {
 			throw new InvalidCoordinateException( dLatDegrees, "Latitude" );
