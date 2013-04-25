@@ -7,6 +7,7 @@ import org.junit.Test;
 
 import edu.clemson.lph.jitter.geometry.InvalidCoordinateException;
 import edu.clemson.lph.jitter.geometry.MillerProjection;
+import edu.clemson.lph.jitter.logger.Loggers;
 
 public class MillerProjectionTests {
 	private static final double TOLERANCE = 0.01;  // Meters in this case!
@@ -71,7 +72,7 @@ public class MillerProjectionTests {
 			assertTrue( Math.abs(aCoords[0] - dNorth) < TOLERANCE  );
 			assertTrue( Math.abs(aCoords[1] - dEast) < TOLERANCE  );	
 		} catch (InvalidCoordinateException e) {
-			e.printStackTrace();
+			Loggers.error(e);
 			fail( e.getMessage() );
 		}
 	}

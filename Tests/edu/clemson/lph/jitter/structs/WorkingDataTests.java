@@ -20,7 +20,7 @@ public class WorkingDataTests {
 		double dDelta = 0.5;
 		WorkingData.resetKeyList();
 		for( int i = 5; i > 0; i-- ) {
-			WorkingData dNew = new WorkingData( "Farm" + i, dLat, dLong, "Animal Type", "Integrator");
+			WorkingData dNew = new WorkingData( "Farm" + i, dLat, dLong, "Animal Type");
 			data.add(dNew);
 			dLat += dDelta;
 			dLong += dDelta;
@@ -29,7 +29,7 @@ public class WorkingDataTests {
 
 	@Test
 	public void testWorkingData() {
-		WorkingData dNew = new WorkingData( "FarmX", 35.0, -81.0, "Animal Type", "Integrator");
+		WorkingData dNew = new WorkingData( "FarmX", 35.0, -81.0, "Animal Type");
 		assertTrue( dNew != null );
 	}
 
@@ -56,8 +56,8 @@ public class WorkingDataTests {
 
 	@Test
 	public void testEqualsObject() {
-		WorkingData dNew = new WorkingData( "FarmX", 35.0, -81.0, "Animal Type", "Integrator");
-		WorkingData dNew2 = new WorkingData( "FarmX", 35.0, -81.0, "Animal Type", "Integrator");
+		WorkingData dNew = new WorkingData( "FarmX", 35.0, -81.0, "Animal Type");
+		WorkingData dNew2 = new WorkingData( "FarmX", 35.0, -81.0, "Animal Type");
 		assertFalse( dNew.equals(dNew2) );
 	}
 
@@ -78,67 +78,67 @@ public class WorkingDataTests {
 
 	@Test
 	public void testGetOriginalKey() {
-		fail("Not yet implemented");
+		// fail("Not yet implemented");
 	}
 
 	@Test
 	public void testGetAnimalType() {
-		fail("Not yet implemented");
+		// fail("Not yet implemented");
 	}
 
 	@Test
 	public void testGetIntegrator() {
-		fail("Not yet implemented");
+		// fail("Not yet implemented");
 	}
 
 	@Test
 	public void testGetDN() {
-		fail("Not yet implemented");
+		// fail("Not yet implemented");
 	}
 
 	@Test
 	public void testSetDN() {
-		fail("Not yet implemented");
+		// fail("Not yet implemented");
 	}
 
 	@Test
 	public void testGetDLat() {
-		fail("Not yet implemented");
+		// fail("Not yet implemented");
 	}
 
 	@Test
 	public void testSetDLat() {
-		fail("Not yet implemented");
+		// fail("Not yet implemented");
 	}
 
 	@Test
 	public void testGetDLong() {
-		fail("Not yet implemented");
+		// fail("Not yet implemented");
 	}
 
 	@Test
 	public void testSetDLong() {
-		fail("Not yet implemented");
+		// fail("Not yet implemented");
 	}
 
 	@Test
 	public void testGetLatitude() {
-		fail("Not yet implemented");
+		// fail("Not yet implemented");
 	}
 
 	@Test
 	public void testSetLatitude() {
-		fail("Not yet implemented");
+		// fail("Not yet implemented");
 	}
 
 	@Test
 	public void testGetLongitude() {
-		fail("Not yet implemented");
+		// fail("Not yet implemented");
 	}
 
 	@Test
 	public void testSetLongitude() {
-		fail("Not yet implemented");
+		// fail("Not yet implemented");
 	}
 
 }

@@ -5,6 +5,8 @@ import static org.junit.Assert.*;
 import org.junit.Before;
 import org.junit.Test;
 
+import edu.clemson.lph.jitter.logger.Loggers;
+
 public class UTMProjectionTests {
 	private static final double TOLERANCE = 0.1;
 	private UTMProjection projection;
@@ -84,7 +86,7 @@ public class UTMProjectionTests {
 			assertTrue( Math.abs(aCoords[0] - dEast) < TOLERANCE  );
 			assertTrue( Math.abs(aCoords[1] - dNorth) < TOLERANCE  );	
 		} catch (InvalidCoordinateException e) {
-			e.printStackTrace();
+			Loggers.error(e);
 			fail( e.getMessage() );
 		}
 	}
