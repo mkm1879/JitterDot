@@ -6,7 +6,6 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
-import java.util.ArrayList;
 
 import com.Ostermiller.util.*;
 
@@ -15,6 +14,7 @@ import edu.clemson.lph.jitter.geometry.InvalidCoordinateException;
 import edu.clemson.lph.jitter.logger.Loggers;
 import edu.clemson.lph.jitter.structs.ColumnNameMap;
 import edu.clemson.lph.jitter.structs.WorkingData;
+import edu.clemson.lph.jitter.structs.WorkingDataRow;
 
 public class SourceCSVFile {
 	private ColumnNameMap map = new ColumnNameMap();
@@ -26,7 +26,6 @@ public class SourceCSVFile {
 	public SourceCSVFile( File fIn ) throws FileNotFoundException, IOException {
 		fInput = fIn;
 		iRows = getRowCount(fIn);
-		WorkingData.setRows(iRows);  // populate list of keys with right number of values.
 		parser = new LabeledCSVParser( new ExcelCSVParser( new FileInputStream( fInput )));
 		aColumns = parser.getLabels();
 	}
@@ -44,8 +43,9 @@ public class SourceCSVFile {
 	 * @throws InvalidCoordinateException When converting coordinates from strings in CSV file.
 	 * @throws InvalidInputException For any row that lacks valid data for any required field.
 	 */
-	public ArrayList<WorkingData> getData() throws IOException, NumberFormatException, InvalidCoordinateException, InvalidInputException {
-		ArrayList<WorkingData> aData = new ArrayList<WorkingData>();
+	public WorkingData getData() throws IOException, NumberFormatException, InvalidCoordinateException, InvalidInputException {
+		WorkingData aData = new WorkingData();
+		aData.setRows(iRows);
 		String aLine[] = null;
 		while( (aLine = parser.getLine()) != null ) {
 			String sOriginalKey = null;
@@ -118,7 +118,7 @@ public class SourceCSVFile {
 			if( sOriginalKey == null || dLongitudeIn == null || dLatitudeIn == null || sAnimalType == null ) {
 				throw new InvalidInputException( "Invalid data on line " + parser.getLastLineNumber() );
 			}
-			WorkingData dataRow = new WorkingData( sOriginalKey, dLatitudeIn, dLongitudeIn, sAnimalType );
+			WorkingDataRow dataRow = new WorkingDataRow( sOriginalKey, dLatitudeIn, dLongitudeIn, sAnimalType );
 			if( iAnimals >= 0 )
 				dataRow.setAnimals(iAnimals);
 			if( iHouses >= 0 )

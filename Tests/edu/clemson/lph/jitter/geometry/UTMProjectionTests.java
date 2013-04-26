@@ -20,6 +20,19 @@ public class UTMProjectionTests {
 	public void testUTMProjection() throws InvalidUTMZoneException {
 		new UTMProjection( 28 );
 	}
+	
+	@Test
+	public void testGetCentralMeridianDegrees() {
+		// For zone 16, our test default.
+		assertTrue( Math.abs( projection.getCentralMeridianDegrees() - (-87.00)) < TOLERANCE  );
+	}
+	
+	@Test
+	public void testGetBestZone() {
+		// For zone 16, our test default.
+		// test again with real data in WorkingDataTests
+		assertTrue( projection.getBestZone( projection.getCentralMeridianDegrees() ) == 16 );
+	}
 
 	@Test
 	public void testProject() {

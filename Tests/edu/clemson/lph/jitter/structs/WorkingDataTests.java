@@ -2,143 +2,116 @@ package edu.clemson.lph.jitter.structs;
 
 import static org.junit.Assert.*;
 
-import java.util.ArrayList;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.Collections;
 
 import org.junit.Before;
 import org.junit.Test;
 
-import edu.clemson.lph.jitter.structs.WorkingData;
+import edu.clemson.lph.jitter.files.InvalidInputException;
+import edu.clemson.lph.jitter.files.SourceCSVFile;
+import edu.clemson.lph.jitter.geometry.InvalidCoordinateException;
+import edu.clemson.lph.jitter.geometry.UTMProjection;
 
 public class WorkingDataTests {
-	private ArrayList<WorkingData> data = new ArrayList<WorkingData>();
-	
+	private static final double TOLERANCE = 0.0001;
+	SourceCSVFile source;
+	WorkingData aData;
+
 	@Before
 	public void setUp() throws Exception {
-		double dLat = 34.1;
-		double dLong = -81.9;
-		double dDelta = 0.5;
-		WorkingData.resetKeyList();
-		for( int i = 5; i > 0; i-- ) {
-			WorkingData dNew = new WorkingData( "Farm" + i, dLat, dLong, "Animal Type");
-			data.add(dNew);
-			dLat += dDelta;
-			dLong += dDelta;
+		File fileIn = new File( "Test.csv");
+		try {
+			source = new SourceCSVFile( fileIn );
+			aData = source.getData();		
+		} catch (FileNotFoundException e) {
+			fail(e.getMessage());
+		} catch (IOException e) {
+			fail(e.getMessage());
 		}
 	}
 
 	@Test
-	public void testWorkingData() {
-		WorkingData dNew = new WorkingData( "FarmX", 35.0, -81.0, "Animal Type");
-		assertTrue( dNew != null );
+	public void testGetMinLong() {
+	}
+
+	@Test
+	public void testGetMaxLong() {
+	}
+
+	@Test
+	public void testGetMinLat() {
+	}
+
+	@Test
+	public void testGetMaxLat() {
+	}
+
+	@Test
+	public void testGetMedianLongEven() {
+		assertTrue( Math.abs(aData.getMedianLong() - (-81.6357) ) < TOLERANCE );
+	}
+	
+	@Test
+	public void testGetBestZone() {
+		// For zone 16, our test default.
+		// test again with real data in WorkingDataTests
+		assertTrue( UTMProjection.getBestZone( aData.getMedianLong() ) == 17 );
 	}
 
 	// Also tests CompareTo and CollectionsSort
 	@Test
 	public void testSetSortDirection() {
 		try {
-			WorkingData.setSortDirection(WorkingData.SORT_NORTH_SOUTH);
-			Collections.sort(data);
-			System.out.println( data.get(0).getKey() );
-			assertTrue( data.get(0).getKey() == 5 );
+			aData.setSortDirection(WorkingData.SORT_SOUTH_NORTH);
+			aData.sortMajorAxis();
+			System.out.println( aData.get(0).getOriginalKey() );
+			assertTrue( aData.get(0).getOriginalKey().equals("32") );
 		} catch (Exception e) {
 			fail(e.getMessage());
 		}
 		try {
-			WorkingData.setSortDirection(WorkingData.SORT_WEST_EAST);
-			Collections.sort(data);
-			System.out.println( data.get(0).getKey() );
-			assertTrue( data.get(0).getKey() == 1 );
+			aData.setSortDirection(WorkingData.SORT_WEST_EAST);
+			aData.sortMajorAxis();
+			System.out.println( aData.get(0).getOriginalKey() );
+			assertTrue( aData.get(0).getOriginalKey().equals("17") );
 		} catch (Exception e) {
 			fail(e.getMessage());
 		}
 	}
 
+	/** 
+	 * This tests both an odd number of rows but also switching sort direction
+	 * prior to calculating the median.
+	 */
 	@Test
-	public void testEqualsObject() {
-		WorkingData dNew = new WorkingData( "FarmX", 35.0, -81.0, "Animal Type");
-		WorkingData dNew2 = new WorkingData( "FarmX", 35.0, -81.0, "Animal Type");
-		assertFalse( dNew.equals(dNew2) );
-	}
-
-	@Test
-	public void testGetKey() {
-		assertTrue( data.get(0).getKey() == 1 );
-	}
-
-	@Test
-	public void testGetLatitudeIn() {
-		assertTrue( data.get(0).getLatitudeIn() == 34.1 );
-	}
-
-	@Test
-	public void testGetLongitudeIn() {
-		assertTrue( data.get(0).getLongitudeIn() == -81.9 );
-	}
-
-	@Test
-	public void testGetOriginalKey() {
-		// fail("Not yet implemented");
-	}
-
-	@Test
-	public void testGetAnimalType() {
-		// fail("Not yet implemented");
-	}
-
-	@Test
-	public void testGetIntegrator() {
-		// fail("Not yet implemented");
-	}
-
-	@Test
-	public void testGetDN() {
-		// fail("Not yet implemented");
-	}
-
-	@Test
-	public void testSetDN() {
-		// fail("Not yet implemented");
-	}
-
-	@Test
-	public void testGetDLat() {
-		// fail("Not yet implemented");
-	}
-
-	@Test
-	public void testSetDLat() {
-		// fail("Not yet implemented");
-	}
-
-	@Test
-	public void testGetDLong() {
-		// fail("Not yet implemented");
-	}
-
-	@Test
-	public void testSetDLong() {
-		// fail("Not yet implemented");
-	}
-
-	@Test
-	public void testGetLatitude() {
-		// fail("Not yet implemented");
-	}
-
-	@Test
-	public void testSetLatitude() {
-		// fail("Not yet implemented");
-	}
-
-	@Test
-	public void testGetLongitude() {
-		// fail("Not yet implemented");
-	}
-
-	@Test
-	public void testSetLongitude() {
-		// fail("Not yet implemented");
+	public void testGetMedianLongOdd() {
+		File fileIn = new File( "Test2.csv");
+		try {
+			source = new SourceCSVFile( fileIn );
+			aData = source.getData();	
+			aData.setSortDirection(WorkingData.SORT_SOUTH_NORTH);
+		} catch (FileNotFoundException e) {
+			fail(e.getMessage());
+		} catch (IOException e) {
+			fail(e.getMessage());
+		} catch (NumberFormatException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (InvalidCoordinateException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (InvalidInputException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		System.out.println(aData.getMedianLong());
+		assertTrue( Math.abs(aData.getMedianLong() - (-81.6194) ) < TOLERANCE );
 	}
 
 }

@@ -1,85 +1,52 @@
 package edu.clemson.lph.jitter.structs;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
-import java.util.List;
+import java.util.Comparator;
 
-/**
- * 
- * @author mmarti5
- * Note: this class has a natural ordering that is inconsistent with equals.  Sort order arranges 
- * points geographically along east west or north south axis so they may fall on the same lat or long
- * but not be the same point. 
- */
 
-public class WorkingData implements Comparable<WorkingData> {
-	public static final int SORT_NORTH_SOUTH = 0;
+@SuppressWarnings("serial")
+public class WorkingData extends ArrayList<WorkingDataRow> {
+	public static final int SORT_NONE = -1;
+	public static final int SORT_SOUTH_NORTH = 0;
 	public static final int SORT_WEST_EAST = 1;
-	private static int iSortDirection = SORT_WEST_EAST;
-	private static int iNextKey = 0;
-	private static ArrayList<Integer> randInts;
-	private static int iRows = 10000;
 	
-	// Fields
-	private String sOriginalKey;
-	private int iKey = -1;
-	private double dLatitudeIn = -1.0;
-	private double dLongitudeIn = -1.0;
-	private String sAnimalType = null;
-	private String sIntegrator = null;
-	private int iHouses = -1;
-	private int iAnimals = -1;
-	private String sStatus = null;
-	private int iDaysInState = -1;
-	private int iDaysLeftInState = -1;
+	private int iSortDirection = SORT_WEST_EAST;
+	private int iCurrentSort = SORT_NONE;
+	private int iNextKey = 0;
+	private ArrayList<Integer> randInts;
+	private int iRows = 10000;
+	private Double dMinLong = null;
+	private Double dMaxLong = null;
+	private Double dMinLat = null;
+	private Double dMaxLat = null;
 	
+	public WorkingData() {
+	}
 	
-	// Temporary Fields
-	private double dDN = -1.0;
-	private double dDLat = -1.0;
-	private double dDLong = -1.0;
-	
-	// Output Fields
-	private double dLatitude = -1.0;
-	private double dLongitude = -1.0;
+	@Override
+	public boolean add(WorkingDataRow rowIn) {
+		boolean bRet = false;
+		// Pull our key from a pseudo random list of integers (10000 or number of rows if calculated.)
+		rowIn.setKey(randInts.get(iNextKey++));
+		super.add(rowIn);
+		return bRet;
+	}
 	
 	/**
 	 * Sets the number of rows to be keyed.  If set too low, constructor will fail
 	 * with an indexOutOfBounds error.
 	 * @param iNumRows
 	 */
-	public static void setRows( int iNumRows ) {
+	public void setRows( int iNumRows ) {
 		iRows = iNumRows;
-		randInts = null; // populate next time an instance is constructed
-	}
-	
-	/**
-	 * Constructor with just the essential columns.  Use setters to provide other columns.
-	 * @param sOriginalKey
-	 * @param dLatitude
-	 * @param dLongitude
-	 * @param sAnimalType
-	 */
-	public WorkingData( String sOriginalKey, double dLatitude, double dLongitude, String sAnimalType ) {
 		// populate static randInts here so default size will work.
 		if( randInts == null ) {
-			randInts = randomPick(1, iRows);
+			randInts = randomPick(1, iRows+1);
 		}
-		this.sOriginalKey = sOriginalKey;
-		// Pull our key from a pseudo random list of integers (10000 or number of rows if calculated.)
-		this.iKey = randInts.get(iNextKey++);
-		this.dLatitudeIn = dLatitude;
-		this.dLongitudeIn = dLongitude;
-		this.sAnimalType = sAnimalType;
 	}
 	
-	public static void resetKeyList() {
-		iNextKey = 0;
-		// don't waste time reshuffling unless necessary.  If so, call setRows again or reshuffle.
-	}
-	
-	public static void reshuffle() {
+	public void reshuffle() {
 		randInts = null;
 	}
 	
@@ -87,8 +54,8 @@ public class WorkingData implements Comparable<WorkingData> {
 	 * Default and fall back is East West since most states are longer that direction.
 	 * @param iSort
 	 */
-	public static void setSortDirection( int iSort ) throws Exception {
-		if( iSort == SORT_NORTH_SOUTH || iSort == SORT_WEST_EAST ) {
+	public void setSortDirection( int iSort ) throws Exception {
+		if( iSort == SORT_SOUTH_NORTH || iSort == SORT_WEST_EAST ) {
 			iSortDirection = iSort;
 		}
 		else {
@@ -96,255 +63,79 @@ public class WorkingData implements Comparable<WorkingData> {
 		}
 	}
 	
+	public int getSortDirection() {
+		return iSortDirection;
+	}
 	
-	@Override
-	public int compareTo(WorkingData otherData) {
-		if( iSortDirection == SORT_NORTH_SOUTH ) {
-			if( dLatitudeIn < otherData.dLatitudeIn )
-				return 1;
-			else if ( otherData.dLatitudeIn < dLatitudeIn )
-				return -1;
-			else 
-				return 0;
+	
+	public Double getMinLong() {
+		if( dMinLong == null && dMinLat == null )
+			sortMajorAxis();
+		return dMinLong;
+	}
+	public Double getMaxLong() {
+		if( dMinLong == null && dMinLat == null )
+			sortMajorAxis();
+		return dMaxLong;
+	}
+	public Double getMinLat() {
+		if( dMinLong == null && dMinLat == null )
+			sortMajorAxis();
+		return dMinLat;
+	}
+	public Double getMaxLat() {
+		if( dMinLong == null && dMinLat == null )
+			sortMajorAxis();
+		return dMaxLat;
+	}
+	
+	public Double getMedianLong() {
+		Double dMedian = null;
+		if( iCurrentSort != SORT_WEST_EAST) {
+			Collections.sort(this, new CompareLongitude() );
+			iCurrentSort = SORT_WEST_EAST;			
+		}
+		if( size() % 2 != 0 ) {
+			WorkingDataRow midRow = get( size() / 2);
+			dMedian = midRow.getLongitudeIn();
 		}
 		else {
-			if( dLongitudeIn < otherData.dLongitudeIn )
-				return -1;
-			else if ( otherData.dLongitudeIn < dLongitudeIn )
-				return 1;
-			else 
-				return 0;
+			WorkingDataRow lowRow = get( (size() -1) / 2 );
+			WorkingDataRow highRow = get( ((size() -1) / 2) + 1 );
+			dMedian = ( lowRow.getLongitudeIn() + highRow.getLongitudeIn() ) / 2.0;
 		}
+		if( iCurrentSort != getSortDirection() ) {
+			sortMajorAxis();
+		}
+		return dMedian;
 	}
 	
-	/**
-	 * NOTE: Equality and Compare are NOT equivalent in this case.  Equality is based on key
-	 * while comparison is based on Longitude for spatial sorting.
-	 * @param otherData is another instance of WorkingData
-	 */
-	@Override
-	public boolean equals(Object otherData) {
-		if( otherData instanceof WorkingData && iKey == ((WorkingData)otherData).iKey )
-			return true;
-		else
-			return false;
-	}
+	
 
 	/**
-	 * 
-	 * @return int
+	 * Sort using WorkingDataRow's compareTo method.
 	 */
-	public int getKey() {
-		return iKey;
-	}
-
-	/**
-	 * 
-	 * @return double Original Latitude
-	 */
-	public double getLatitudeIn() {
-		return dLatitudeIn;
-	}
-
-	/**
-	 * 
-	 * @return double Original Longitude
-	 */
-	public double getLongitudeIn() {
-		return dLongitudeIn;
-	}
-
-	/**
-	 * 
-	 * @return String original Key
-	 */
-	public String getOriginalKey() {
-		return sOriginalKey;
-	}
-
-	/**
-	 * 
-	 * @return String Animal Type
-	 */
-	public String getAnimalType() {
-		return sAnimalType;
-	}
-
-	/**
-	 * 
-	 * @return String integrator
-	 */
-	public String getIntegrator() {
-		return sIntegrator;
-	}
-
-	/**
-	 * 
-	 * @param sIntegrator String integrator
-	 */
-	public void setIntegrator(String sIntegrator) {
-		this.sIntegrator = sIntegrator;
-	}
-
-	/**
-	 * 
-	 * @return double Distance to Nth nearest similar neighbor.
-	 */
-	public double getDN() {
-		return dDN;
-	}
-
-	/**
-	 * 
-	 * @param dN double Distance to Nth nearest similar neighbor.
-	 */
-	public void setDN(double dN) {
-		this.dDN = dN;
-	}
-
-	/**
-	 * 
-	 * @return double Delta Latitude needed
-	 */
-	public double getDLat() {
-		return dDLat;
-	}
-
-	/**
-	 * 
-	 * @param dLat double Delta Latitude needed
-	 */
-	public void setDLat(double dLat) {
-		this.dDLat = dLat;
-	}
-
-	/**
-	 * 
-	 * @return double Delta Longitude needed
-	 */
-	public double getDLong() {
-		return dDLong;
-	}
-
-	/**
-	 * 
-	 * @param dLong double Delta Latitude needed
-	 */
-	public void setDLong(double dLong) {
-		this.dDLong = dLong;
-	}
-
-	/**
-	 * 
-	 * @return double Jittered Latitude
-	 */
-	public double getLatitude() {
-		return dLatitude;
-	}
-
-	/**
-	 * 
-	 * @param dLatitude double Jittered Latitude
-	 */
-	public void setLatitude(double dLatitude) {
-		this.dLatitude = dLatitude;
-	}
-
-	/**
-	 * 
-	 * @return double Jittered Longitude
-	 */
-	public double getLongitude() {
-		return dLongitude;
-	}
-
-	/**
-	 * 
-	 * @param dLongitude double Jittered Longitude
-	 */
-	public void setLongitude(double dLongitude) {
-		this.dLongitude = dLongitude;
-	}
-
-	/**
-	 * 
-	 * @return int Number of Houses
-	 */
-	public int getHouses() {
-		return iHouses;
-	}
-
-	/**
-	 * 
-	 * @param iHouses int Number of Houses
-	 */
-	public void setHouses(int iHouses)
-	{
-		this.iHouses = iHouses;
-	}
-
-	/**
-	 * 
-	 * @return int Number of Animals
-	 */
-	public int getAnimals() {
-		return iAnimals;
-	}
-
-	/**
-	 * 
-	 * @param iAnimals int Number of Animals
-	 */
-	public void setAnimals(int iAnimals) {
-		this.iAnimals = iAnimals;
-	}
-
-	/**
-	 * 
-	 * @return String Status
-	 */
-	public String getStatus() {
-		return sStatus;
-	}
-
-	/**
-	 * 
-	 * @param sStatus String Status
-	 */
-	public void setStatus(String sStatus) {
-		this.sStatus = sStatus;
-	}
-
-	/**
-	 * 
-	 * @return int Days in this Status
-	 */
-	public int getDaysInState() {
-		return iDaysInState;
-	}
-
-	/**
-	 * 
-	 * @param iDaysInState int Days in this Status
-	 */
-	public void setDaysInState(int iDaysInState) {
-		this.iDaysInState = iDaysInState;
-	}
-
-	/**
-	 * 
-	 * @return int Days left in this Status 
-	 */
-	public int getDaysLeftInState() {
-		return iDaysLeftInState;
-	}
-
-	/**
-	 * 
-	 * @param iDaysLeftInState int Days left in this Status
-	 */
-	public void setDaysLeftInState(int iDaysLeftInState) {
-		this.iDaysLeftInState = iDaysLeftInState;
+	public void sortMajorAxis() {
+		if( getSortDirection() == SORT_WEST_EAST ) {
+			Collections.sort(this, new CompareLongitude() );
+			iCurrentSort = SORT_WEST_EAST;
+			WorkingDataRow firstRow = this.get(0);
+			dMinLong = firstRow.getLongitudeIn();
+			WorkingDataRow lastRow = this.get(this.size()-1);
+			dMaxLong = lastRow.getLongitudeIn();
+			dMinLat = null;
+			dMaxLat = null;			
+		}
+		else {
+			Collections.sort(this, new CompareLatitude() );
+			iCurrentSort = SORT_SOUTH_NORTH;
+			WorkingDataRow firstRow = this.get(0);
+			dMinLat = firstRow.getLongitudeIn();
+			WorkingDataRow lastRow = this.get(this.size()-1);
+			dMaxLat = lastRow.getLongitudeIn();
+			dMinLong = null;
+			dMaxLong = null;
+		}
 	}
 	
 
@@ -367,6 +158,32 @@ public class WorkingData implements Comparable<WorkingData> {
 
 	    // Pick count items.
 	    return numbers;
+	}
+
+	
+	class CompareLatitude implements Comparator<WorkingDataRow> {
+		@Override
+		public int compare(WorkingDataRow arg0, WorkingDataRow arg1) {
+			if( arg0.getLatitudeIn() < arg1.getLatitudeIn() )
+				return -1;
+			else if ( arg0.getLatitudeIn() > arg1.getLatitudeIn() )
+				return 1;
+			else 
+				return 0;
+		}
+	}
+
+	class CompareLongitude implements Comparator<WorkingDataRow> {
+		@Override
+		public int compare(WorkingDataRow arg0, WorkingDataRow arg1) {
+			if( arg0.getLongitudeIn() < arg1.getLongitudeIn() )
+				return -1;
+			else if ( arg0.getLongitudeIn() > arg1.getLongitudeIn() )
+				return 1;
+			else 
+				return 0;
+		}
+
 	}
 
 }
