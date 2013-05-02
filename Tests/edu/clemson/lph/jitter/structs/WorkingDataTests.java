@@ -5,7 +5,6 @@ import static org.junit.Assert.*;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.Collections;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -35,18 +34,22 @@ public class WorkingDataTests {
 
 	@Test
 	public void testGetMinLong() {
+		assertTrue( Math.abs(aData.getMinLong() - (-82.992877) ) < TOLERANCE );
 	}
 
 	@Test
 	public void testGetMaxLong() {
+		assertTrue( Math.abs(aData.getMaxLong() - (-80.647672) ) < TOLERANCE );
 	}
 
 	@Test
 	public void testGetMinLat() {
+		assertTrue( Math.abs(aData.getMinLat() - (33.825771) ) < TOLERANCE );
 	}
 
 	@Test
 	public void testGetMaxLat() {
+		assertTrue( Math.abs(aData.getMaxLat() - (34.787656) ) < TOLERANCE );
 	}
 
 	@Test
@@ -60,6 +63,16 @@ public class WorkingDataTests {
 		// test again with real data in WorkingDataTests
 		assertTrue( UTMProjection.getBestZone( aData.getMedianLong() ) == 17 );
 	}
+	
+	@Test 
+	public void testGetMajorAxis() {
+		try {
+			aData.setSortDirection();
+			assertTrue(aData.getSortDirection() == WorkingData.SORT_WEST_EAST);
+		} catch (Exception e) {
+			fail(e.getMessage());
+		}
+	}
 
 	// Also tests CompareTo and CollectionsSort
 	@Test
@@ -67,7 +80,6 @@ public class WorkingDataTests {
 		try {
 			aData.setSortDirection(WorkingData.SORT_SOUTH_NORTH);
 			aData.sortMajorAxis();
-			System.out.println( aData.get(0).getOriginalKey() );
 			assertTrue( aData.get(0).getOriginalKey().equals("32") );
 		} catch (Exception e) {
 			fail(e.getMessage());
@@ -75,7 +87,6 @@ public class WorkingDataTests {
 		try {
 			aData.setSortDirection(WorkingData.SORT_WEST_EAST);
 			aData.sortMajorAxis();
-			System.out.println( aData.get(0).getOriginalKey() );
 			assertTrue( aData.get(0).getOriginalKey().equals("17") );
 		} catch (Exception e) {
 			fail(e.getMessage());
@@ -98,20 +109,19 @@ public class WorkingDataTests {
 		} catch (IOException e) {
 			fail(e.getMessage());
 		} catch (NumberFormatException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			fail(e.getMessage());
 		} catch (InvalidCoordinateException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			fail(e.getMessage());
 		} catch (InvalidInputException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			fail(e.getMessage());
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			fail(e.getMessage());
 		}
-		System.out.println(aData.getMedianLong());
 		assertTrue( Math.abs(aData.getMedianLong() - (-81.6194) ) < TOLERANCE );
 	}
 
+	@Test
+	public void testCalcDKs() {
+		aData.calcDKs(5);
+	}
 }

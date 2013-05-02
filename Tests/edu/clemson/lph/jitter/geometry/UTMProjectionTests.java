@@ -31,7 +31,7 @@ public class UTMProjectionTests {
 	public void testGetBestZone() {
 		// For zone 16, our test default.
 		// test again with real data in WorkingDataTests
-		assertTrue( projection.getBestZone( projection.getCentralMeridianDegrees() ) == 16 );
+		assertTrue( UTMProjection.getBestZone( projection.getCentralMeridianDegrees() ) == 16 );
 	}
 
 	@Test
@@ -95,7 +95,6 @@ public class UTMProjectionTests {
 		double[] aCoords;
 		try {
 			aCoords = projection.project(dLat, dLong);
-			System.out.println( dNorth + ", " + dEast + " =? " + aCoords[1] + ", " + aCoords[0]);
 			assertTrue( Math.abs(aCoords[0] - dEast) < TOLERANCE  );
 			assertTrue( Math.abs(aCoords[1] - dNorth) < TOLERANCE  );	
 		} catch (InvalidCoordinateException e) {

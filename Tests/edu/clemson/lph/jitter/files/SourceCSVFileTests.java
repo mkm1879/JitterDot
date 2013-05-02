@@ -5,7 +5,6 @@ import static org.junit.Assert.*;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.ArrayList;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -50,7 +49,7 @@ public class SourceCSVFileTests {
 		assertTrue( aCols[1].equals("HerdSize") );
 		assertTrue( aCols[2].equals("Lon") );
 		assertTrue( aCols[3].equals("Lat") );
-		assertTrue( aCols[4].equals("ProductionType") );
+		assertTrue( aCols[4].equals("AnimalType") );
 		assertTrue( aCols[5].equals("Status") );
 	}
 
@@ -66,17 +65,17 @@ public class SourceCSVFileTests {
 			assertTrue( Math.abs(row2.getLatitudeIn() - 34.351887 ) < TOLERANCE );
 			assertTrue( row2.getAnimalType().equals("Turkey grow-out"));
 			assertTrue( row2.getStatus().equals("Susceptible"));
+			assertTrue( row2.getIntegrator().equals("A Farms"));
 			assertTrue( row2.getDaysInState() < 0 );
 			assertTrue( row2.getDaysLeftInState() < 0 );
 			assertTrue( row2.getAnimals() == 15500 );
-			System.out.println(row2.getKey() );
-			System.out.println(row2.getOriginalKey() );
 			// try converting from minutes and seconds
 			WorkingDataRow row3 = aData.get(2);
 			assertTrue( Math.abs(row3.getLongitudeIn() - (-82.924311) ) < TOLERANCE );
 			assertTrue( Math.abs(row3.getLatitudeIn() - 34.550682 ) < TOLERANCE );
 			// Test odd characters and quoted field with comma.  Not meant to be a meaningful value.
 			assertTrue( row3.getAnimalType().equals("Broiler's, Pullets"));
+			assertTrue( row3.getIntegrator().equals("B Farms"));
 			int iRows = source.getRows();
 			WorkingDataRow rowLast = aData.get(iRows-1);
 			assertTrue( rowLast.getOriginalKey().equals("41"));
@@ -88,6 +87,7 @@ public class SourceCSVFileTests {
 		} catch (InvalidCoordinateException e) {
 			fail(e.getMessage());
 		} catch (InvalidInputException e) {
+			e.printStackTrace();
 			fail(e.getMessage());
 		}
 	}

@@ -1,5 +1,7 @@
 package edu.clemson.lph.jitter.geometry;
 
+import edu.clemson.lph.jitter.structs.WorkingData;
+
 public class Distance {
 	private static final double DEG_PER_RAD = 180.0/Math.PI;
 	private static final double EARTH_RADIUS = 3963.1;
@@ -37,6 +39,18 @@ public class Distance {
 			}
 		}
 		return dRet;
+	}
+	
+	public static double getMajorDistance( double dLat1Degrees, double dLong1Degrees, 
+												double dLat2Degrees, double dLong2Degrees, int iSortDirection )
+				 throws InvalidCoordinateException {
+		double dRet = -1.0;
+		if( iSortDirection == WorkingData.SORT_WEST_EAST ) 
+			dRet = getDistance( dLat1Degrees, dLong1Degrees, dLat1Degrees, dLong2Degrees);
+		else if( iSortDirection == WorkingData.SORT_SOUTH_NORTH ) 
+			dRet = getDistance( dLat1Degrees, dLong1Degrees, dLat2Degrees, dLong1Degrees);
+		return dRet;
+		
 	}
 
 }

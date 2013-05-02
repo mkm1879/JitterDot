@@ -1,7 +1,7 @@
 package edu.clemson.lph.jitter.structs;
 
-import java.util.ArrayList;
-import java.util.Collections;
+import edu.clemson.lph.controls.GPSTextField;
+
 
 /**
  * 
@@ -28,7 +28,7 @@ public class WorkingDataRow {
 	
 	
 	// Temporary Fields
-	private double dDN = -1.0;
+	private double dDK = -1.0;
 	private double dDLat = -1.0;
 	private double dDLong = -1.0;
 	
@@ -130,16 +130,16 @@ public class WorkingDataRow {
 	 * 
 	 * @return double Distance to Nth nearest similar neighbor.
 	 */
-	public double getDN() {
-		return dDN;
+	public double getDK() {
+		return dDK;
 	}
 
 	/**
 	 * 
 	 * @param dN double Distance to Nth nearest similar neighbor.
 	 */
-	public void setDN(double dN) {
-		this.dDN = dN;
+	public void setDK(double dK) {
+		this.dDK = dK;
 	}
 
 	/**

@@ -83,6 +83,9 @@ public class SourceCSVFile {
 						iHouses = -1;
 					}					
 				}
+				else if( "AnimalType".equalsIgnoreCase(sColName) || "ProductionType".equalsIgnoreCase(sColName) ) {
+					sAnimalType = sValue;
+				}
 				else if( "Integrator".equalsIgnoreCase(sColName) ) {
 					sIntegrator = sValue;
 				}
@@ -93,9 +96,6 @@ public class SourceCSVFile {
 				else if( "Lat".equalsIgnoreCase(sColName) ) {
 					String sLatitude = GPSTextField.convertGPS(sValue);
 					dLatitudeIn = Double.parseDouble(sLatitude);					
-				}
-				else if( "ProductionType".equalsIgnoreCase(sColName) ) {
-					sAnimalType = sValue;
 				}
 				else if( "Status".equalsIgnoreCase(sColName) ) {
 					sStatus = sValue;

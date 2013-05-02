@@ -68,7 +68,6 @@ public class MillerProjectionTests {
 		double[] aCoords;
 		try {
 			aCoords = projection.project(dLat, dLong);
-			System.out.println( dNorth + ", " + dEast + " =? " + aCoords[0] + ", " + aCoords[1]);
 			assertTrue( Math.abs(aCoords[0] - dNorth) < TOLERANCE  );
 			assertTrue( Math.abs(aCoords[1] - dEast) < TOLERANCE  );	
 		} catch (InvalidCoordinateException e) {

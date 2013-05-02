@@ -8,6 +8,7 @@ import org.junit.Test;
 import edu.clemson.lph.jitter.geometry.Distance;
 import edu.clemson.lph.jitter.geometry.InvalidCoordinateException;
 import edu.clemson.lph.jitter.logger.Loggers;
+import edu.clemson.lph.jitter.structs.WorkingData;
 
 public class DistanceTests {
 	private static final double TOLERANCE = 0.0001; // Miles in this case. Using the same math these represent floating point rounding mostly.
@@ -40,14 +41,14 @@ public class DistanceTests {
 			assertTrue( Math.abs(Distance.getDistance(34.301147, -81.625323, 34.492518, -80.366799) - 73.0387) < TOLERANCE);
 			assertTrue( Math.abs(Distance.getDistance(34.300579, -81.682006, 34.532167, -80.628833) - 62.1933) < TOLERANCE);
 			assertTrue( Math.abs(Distance.getDistance(34.552780, -82.940730, 35.022848, -82.084167) - 58.5215) < TOLERANCE);
-			System.out.println(Distance.getDistance(34.763760, -80.935660, 33.242394, -80.204648));
+//			System.out.println(Distance.getDistance(34.763760, -80.935660, 33.242394, -80.204648));
 			// These all seem to be SQL Server rounding errors.
 			//		assertTrue( Math.abs(Distance.getDistance(34.763760, -80.935660, 33.242394, -80.204648) - 113.272) < TOLERANCE);
 			assertTrue( Math.abs(Distance.getDistance(34.763760, -80.935660, 33.242394, -80.204648) - 113.272) < TOLERANCE * 5);
-			System.out.println(Distance.getDistance(34.398907, -81.611130, 33.242394, -80.204648));
+//			System.out.println(Distance.getDistance(34.398907, -81.611130, 33.242394, -80.204648));
 			//		assertTrue( Math.abs(Distance.getDistance(34.398907, -81.611130, 33.242394, -80.204648) - 113.714) < TOLERANCE);
 			assertTrue( Math.abs(Distance.getDistance(34.398907, -81.611130, 33.242394, -80.204648) - 113.714) < TOLERANCE * 5);
-			System.out.println(Distance.getDistance(34.334553, -81.645930, 33.242394, -80.204648));
+//			System.out.println(Distance.getDistance(34.334553, -81.645930, 33.242394, -80.204648));
 			//		assertTrue( Math.abs(Distance.getDistance(34.334553, -81.645930, 33.242394, -80.204648) - 112.121) < TOLERANCE);
 			assertTrue( Math.abs(Distance.getDistance(34.334553, -81.645930, 33.242394, -80.204648) - 112.121) < TOLERANCE * 5);
 			assertTrue( Math.abs(Distance.getDistance(34.536983, -83.005000, 34.017170, -81.840600) - 75.6432) < TOLERANCE);
@@ -56,18 +57,18 @@ public class DistanceTests {
 			assertTrue( Math.abs(Distance.getDistance(34.242720, -81.758762, 34.465000, -80.443167) - 76.6821) < TOLERANCE);
 			assertTrue( Math.abs(Distance.getDistance(34.670167, -81.839500, 34.453600, -80.522800) - 76.4822) < TOLERANCE);
 			assertTrue( Math.abs(Distance.getDistance(34.474952, -81.295981, 34.036000, -81.935800) - 47.5378) < TOLERANCE);
-			System.out.println(Distance.getDistance(33.825714, -81.422653, 34.695850, -79.761220));
+//			System.out.println(Distance.getDistance(33.825714, -81.422653, 34.695850, -79.761220));
 			//		assertTrue( Math.abs(Distance.getDistance(33.825714, -81.422653, 34.695850, -79.761220) - 112.441) < TOLERANCE);
 			assertTrue( Math.abs(Distance.getDistance(33.825714, -81.422653, 34.695850, -79.761220) - 112.441) < TOLERANCE * 5);
 			assertTrue( Math.abs(Distance.getDistance(33.936811, -81.480422, 33.702833, -81.344167) - 17.9786) < TOLERANCE);
 			assertTrue( Math.abs(Distance.getDistance(34.854330, -81.365660, 33.757830, -81.419670) - 75.9067) < TOLERANCE);
-			System.out.println(Distance.getDistance(35.034000, -82.533000, 34.329658, -80.492198));
+//			System.out.println(Distance.getDistance(35.034000, -82.533000, 34.329658, -80.492198));
 			//		assertTrue( Math.abs(Distance.getDistance(35.034000, -82.533000, 34.329658, -80.492198) - 125.885) < TOLERANCE);
 			assertTrue( Math.abs(Distance.getDistance(35.034000, -82.533000, 34.329658, -80.492198) - 125.885) < TOLERANCE * 5);
 			assertTrue( Math.abs(Distance.getDistance(34.648878, -80.666574, 34.364836, -79.566540) - 65.7069) < TOLERANCE);
 			assertTrue( Math.abs(Distance.getDistance(34.575833, -80.341500, 33.652667, -81.104833) - 77.3833) < TOLERANCE);
 			assertTrue( Math.abs(Distance.getDistance(34.532089, -81.301201, 33.286220, -80.905713) - 89.1158) < TOLERANCE);
-			System.out.println(Distance.getDistance(34.771980, -80.914670, 33.283333, -80.903000));
+//			System.out.println(Distance.getDistance(34.771980, -80.914670, 33.283333, -80.903000));
 			//		assertTrue( Math.abs(Distance.getDistance(34.771980, -80.914670, 33.283333, -80.903000) - 102.971) < TOLERANCE);
 			assertTrue( Math.abs(Distance.getDistance(34.771980, -80.914670, 33.283333, -80.903000) - 102.971) < TOLERANCE * 5);
 			//		Test some close distances where it really matters.
@@ -194,5 +195,17 @@ public class DistanceTests {
 		Distance.getDistance(34.301147, -81.625323, 34.334553, 181.645930);
 	}
 
+	@Test
+	public void testGetMajorDistance() {
+		try {
+			assertTrue( Math.abs(Distance.getMajorDistance(34.301147,-81.625323,34.334553,-81.64593, WorkingData.SORT_WEST_EAST) - 1.1774784) < TOLERANCE);
+			assertTrue( Math.abs(Distance.getMajorDistance(34.301147,-81.625323,34.334553,-81.64593, WorkingData.SORT_SOUTH_NORTH) - 2.3106644) < TOLERANCE);
+		} catch (InvalidCoordinateException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			fail(e.getMessage());
+		}
+
+	}
 
 }

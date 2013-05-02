@@ -2,9 +2,6 @@ package edu.clemson.lph.jitter.structs;
 
 import static org.junit.Assert.*;
 
-import java.util.ArrayList;
-import java.util.Collections;
-
 import org.junit.Before;
 import org.junit.Test;
 
@@ -15,12 +12,13 @@ public class WorkingDataRowTests {
 	
 	@Before
 	public void setUp() throws Exception {
-		data.setRows(100);
+		data.setRows(100);  // this is silly just make sure we have enough keys for testing.
 		double dLat = 34.1;
 		double dLong = -81.9;
 		double dDelta = 0.5;
 		for( int i = 5; i > 0; i-- ) {
 			WorkingDataRow dNew = new WorkingDataRow( "Farm" + i, dLat, dLong, "Animal Type");
+			dNew.setIntegrator("A Farms");
 			data.add(dNew);
 			dLat += dDelta;
 			dLong += dDelta;
@@ -45,6 +43,7 @@ public class WorkingDataRowTests {
 
 	@Test
 	public void testGetKey() {
+// Now that we assign keys pseudorandomly this test doesn't make sense.
 //		assertTrue( data.get(0).getKey() == 1 );
 	}
 
@@ -59,18 +58,13 @@ public class WorkingDataRowTests {
 	}
 
 	@Test
-	public void testGetOriginalKey() {
-		// fail("Not yet implemented");
-	}
-
-	@Test
 	public void testGetAnimalType() {
-		// fail("Not yet implemented");
+		assertTrue( data.get(0).getAnimalType().equals("Animal Type"));
 	}
 
 	@Test
 	public void testGetIntegrator() {
-		// fail("Not yet implemented");
+		assertTrue( data.get(0).getIntegrator().equals("A Farms"));
 	}
 
 	@Test
