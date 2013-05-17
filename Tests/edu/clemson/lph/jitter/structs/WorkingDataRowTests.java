@@ -5,6 +5,7 @@ import static org.junit.Assert.*;
 import org.junit.Before;
 import org.junit.Test;
 
+import edu.clemson.lph.jitter.geometry.InvalidCoordinateException;
 import edu.clemson.lph.jitter.structs.WorkingDataRow;
 
 public class WorkingDataRowTests {
@@ -27,18 +28,30 @@ public class WorkingDataRowTests {
 
 	@Test
 	public void testWorkingData() {
-		WorkingDataRow dNew = new WorkingDataRow( "FarmX", 35.0, -81.0, "Animal Type");
-		assertTrue( dNew != null );
+		WorkingDataRow dNew;
+		try {
+			dNew = new WorkingDataRow( "FarmX", 35.0, -81.0, "Animal Type");
+			assertTrue( dNew != null );
+		} catch (InvalidCoordinateException e) {
+			fail(e.getMessage());
+			e.printStackTrace();
+		}
 	}
 
 
 	@Test
 	public void testEqualsObject() {
-		WorkingDataRow dNew = new WorkingDataRow( "FarmX", 35.0, -81.0, "Animal Type");
-		data.add(dNew);
-		WorkingDataRow dNew2 = new WorkingDataRow( "FarmX", 35.0, -81.0, "Animal Type");
-		data.add(dNew2);
-		assertFalse( dNew.equals(dNew2) );
+		WorkingDataRow dNew;
+		try {
+			dNew = new WorkingDataRow( "FarmX", 35.0, -81.0, "Animal Type");
+			data.add(dNew);
+			WorkingDataRow dNew2 = new WorkingDataRow( "FarmX", 35.0, -81.0, "Animal Type");
+			data.add(dNew2);
+			assertFalse( dNew.equals(dNew2) );
+		} catch (InvalidCoordinateException e) {
+			fail(e.getMessage());
+			e.printStackTrace();
+		}
 	}
 
 	@Test

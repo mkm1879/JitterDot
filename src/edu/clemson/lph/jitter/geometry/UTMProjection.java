@@ -7,8 +7,6 @@ import org.osgeo.proj4j.CoordinateReferenceSystem;
 import org.osgeo.proj4j.CoordinateTransform;
 import org.osgeo.proj4j.CoordinateTransformFactory;
 import org.osgeo.proj4j.ProjCoordinate;
-import org.osgeo.proj4j.proj.Projection;
-import org.osgeo.proj4j.proj.TransverseMercatorProjection;
 
 /**
  * This is a very thin wrapper around the Proj4j library to make it consistent with 

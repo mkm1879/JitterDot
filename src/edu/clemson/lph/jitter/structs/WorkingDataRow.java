@@ -1,6 +1,7 @@
 package edu.clemson.lph.jitter.structs;
 
 import edu.clemson.lph.controls.GPSTextField;
+import edu.clemson.lph.jitter.geometry.InvalidCoordinateException;
 
 
 /**
@@ -44,7 +45,11 @@ public class WorkingDataRow {
 	 * @param dLongitude
 	 * @param sAnimalType
 	 */
-	public WorkingDataRow( String sOriginalKey, double dLatitude, double dLongitude, String sAnimalType ) {
+	public WorkingDataRow( String sOriginalKey, double dLatitude, double dLongitude, String sAnimalType ) throws InvalidCoordinateException {
+		if( !GPSTextField.isValidLatitude(dLatitude) )
+			throw new InvalidCoordinateException(dLatitude, "dLatitude");
+		if( !GPSTextField.isValidLongitude(dLongitude) )
+			throw new InvalidCoordinateException(dLongitude, "dLongitude");
 		this.sOriginalKey = sOriginalKey;
 		this.dLatitudeIn = dLatitude;
 		this.dLongitudeIn = dLongitude;
@@ -186,7 +191,9 @@ public class WorkingDataRow {
 	 * 
 	 * @param dLatitude double Jittered Latitude
 	 */
-	public void setLatitude(double dLatitude) {
+	public void setLatitude(double dLatitude) throws InvalidCoordinateException {
+		if( !GPSTextField.isValidLatitude(dLatitude) )
+			throw new InvalidCoordinateException(dLatitude, "setLatitude()");
 		this.dLatitude = dLatitude;
 	}
 
@@ -202,7 +209,9 @@ public class WorkingDataRow {
 	 * 
 	 * @param dLongitude double Jittered Longitude
 	 */
-	public void setLongitude(double dLongitude) {
+	public void setLongitude(double dLongitude) throws InvalidCoordinateException {
+		if( !GPSTextField.isValidLongitude(dLongitude) )
+			throw new InvalidCoordinateException(dLongitude, "setLongitude()");
 		this.dLongitude = dLongitude;
 	}
 

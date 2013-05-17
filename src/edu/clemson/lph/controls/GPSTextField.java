@@ -189,6 +189,15 @@ public class GPSTextField extends JTextField {
     }
     return Double.toString( round( dRet, 6 ) );
   }
+  
+  public static boolean isValidLatitude( double dLat ) {
+	  return dLat >= -90.0 && dLat <= 90.0;
+  }
+  
+  public static boolean isValidLongitude( double dLong ) {
+	  return dLong >= -180.0 && dLong <= 180.0;
+  }
+
 
   private static double round( double dVal, int iPlaces ) {
     BigDecimal bd = new BigDecimal(dVal);
