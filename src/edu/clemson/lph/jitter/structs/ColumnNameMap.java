@@ -6,8 +6,8 @@ import java.util.HashMap;
  * This class provides a skeleton for later implementation of 
  * a tool to allow user to identify which columns in their input file
  * map to which columns in the standard working data.  The translations
- * will be stored in mCols with the original string in the key
- * and the standard field name in the value.
+ * will be stored in mCols with the standard field name string in the key
+ * and the column label name in the value.
  * @author mmarti5
  *
  */
@@ -19,9 +19,14 @@ public class ColumnNameMap {
 		mCols = new HashMap<String, String>();
 	}
 	
-	public String mapColumn( String sColumnIn ) {
-		String sColumnOut = mCols.get(sColumnIn);
-		if( sColumnOut == null ) sColumnOut = sColumnIn;
-		return sColumnOut;
+	public void put( String sColumnOut, String sColumnIn ) {
+		mCols.put(sColumnOut, sColumnIn);
+	}
+	
+	public String mapColumn( String sColumnOut ) {
+		String sColumnIn = mCols.get(sColumnOut);
+		if( sColumnIn == null ) 
+			sColumnIn = sColumnOut;
+		return sColumnIn;
 	}
 }

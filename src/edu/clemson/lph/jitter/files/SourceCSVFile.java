@@ -17,7 +17,6 @@ import edu.clemson.lph.jitter.structs.WorkingData;
 import edu.clemson.lph.jitter.structs.WorkingDataRow;
 
 public class SourceCSVFile {
-	private ColumnNameMap map = new ColumnNameMap();
 	private File fInput = null;
 	private LabeledCSVParser parser = null;
 	private String aColumns[];
@@ -59,55 +58,52 @@ public class SourceCSVFile {
 			int iDaysInState = -1;
 			int iDaysLeftInState = -1;
 			
-			for( String sLabel : aColumns ) {
-				int iIndex = parser.getLabelIdx(sLabel);
-				String sColName = map.mapColumn(sLabel);				
+			for( String sColName : aColumns ) {
+				int iIndex = parser.getLabelIdx(sColName);
 				String sValue = aLine[iIndex];
 				
-				// slog through all the expected keys saving to appropriate variables in a working data struct.
-				//HerdID,HerdSize,Lon,Lat,ProductionType,Status
-				if( "HerdID".equalsIgnoreCase(sColName) ) {
+				if( ConfigFile.mapColumn("OriginalKey").equalsIgnoreCase(sColName) ) {
 					sOriginalKey = sValue;
 				}
-				else if( "HerdSize".equalsIgnoreCase(sColName) ) {
+				else if( ConfigFile.mapColumn("Animals").equalsIgnoreCase(sColName) ) {
 					try {
 						iAnimals = Integer.parseInt(sValue);
 					} catch( NumberFormatException e ) {
 						iAnimals = -1;
 					}
 				}
-				else if( "Houses".equalsIgnoreCase(sColName) ) {
+				else if( ConfigFile.mapColumn("Houses").equalsIgnoreCase(sColName) ) {
 					try {
 						iHouses = Integer.parseInt(sValue);
 					} catch( NumberFormatException e ) {
 						iHouses = -1;
 					}					
 				}
-				else if( "AnimalType".equalsIgnoreCase(sColName) || "ProductionType".equalsIgnoreCase(sColName) ) {
+				else if( ConfigFile.mapColumn("AnimalType").equalsIgnoreCase(sColName) ) {
 					sAnimalType = sValue;
 				}
-				else if( "Integrator".equalsIgnoreCase(sColName) ) {
+				else if( ConfigFile.mapColumn("Integrator").equalsIgnoreCase(sColName) ) {
 					sIntegrator = sValue;
 				}
-				else if( "Lon".equalsIgnoreCase(sColName) ) {
+				else if( ConfigFile.mapColumn("Longitude").equalsIgnoreCase(sColName) ) {
 					String sLongitude = GPSTextField.convertGPS(sValue);
 					dLongitudeIn = Double.parseDouble(sLongitude);
 				}
-				else if( "Lat".equalsIgnoreCase(sColName) ) {
+				else if( ConfigFile.mapColumn("Latitude").equalsIgnoreCase(sColName) ) {
 					String sLatitude = GPSTextField.convertGPS(sValue);
 					dLatitudeIn = Double.parseDouble(sLatitude);					
 				}
-				else if( "Status".equalsIgnoreCase(sColName) ) {
+				else if( ConfigFile.mapColumn("Status").equalsIgnoreCase(sColName) ) {
 					sStatus = sValue;
 				}
-				else if( "DaysInState".equalsIgnoreCase(sColName) ) {
+				else if( ConfigFile.mapColumn("DaysInState").equalsIgnoreCase(sColName) ) {
 					try {
 						iDaysInState = Integer.parseInt(sValue);
 					} catch( NumberFormatException e ) {
 						iDaysInState = -1;
 					}					
 				}
-				else if( "DaysLeftInState".equalsIgnoreCase(sColName) ) {
+				else if( ConfigFile.mapColumn("DaysLeftInState").equalsIgnoreCase(sColName) ) {
 					try {
 						iDaysLeftInState = Integer.parseInt(sValue);
 					} catch( NumberFormatException e ) {

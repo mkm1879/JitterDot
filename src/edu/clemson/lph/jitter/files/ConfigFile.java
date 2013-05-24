@@ -6,9 +6,11 @@ import java.io.IOException;
 import java.util.Properties;
 
 import edu.clemson.lph.jitter.logger.Loggers;
+import edu.clemson.lph.jitter.structs.ColumnNameMap;
 
 public class ConfigFile {
 	private static Properties props = null;
+	private static ColumnNameMap colMap = null;
 	
 	private static void init() {
 		if( props == null ) {
@@ -22,7 +24,44 @@ public class ConfigFile {
 				System.err.println( "Cannot load JitterDot.config" );
 				Loggers.error(e);
 			}
+			colMap = new ColumnNameMap();
+			// List all common column names and add to map if translations are found
+			String sOriginalKey = getString("OriginalKey");
+			if( sOriginalKey != null )
+				colMap.put( "OriginalKey", sOriginalKey );
+			String sLatitude = getString("Latitude");
+			if( sLatitude!= null )
+				colMap.put( "Latitude", sLatitude );
+			String sLongitude = getString("Longitude");
+			if( sLongitude!= null )
+				colMap.put( "Longitude", sLongitude );
+			String sAnimalType = getString("AnimalType");
+			if( sAnimalType != null )
+				colMap.put("AnimalType", sAnimalType );
+			String sIntegrator = getString("Integrator");
+			if( sIntegrator != null )
+				colMap.put( "Integrator", sIntegrator );
+			String sHouses = getString("Houses");
+			if( sHouses != null )
+				colMap.put( "Houses", sHouses );
+			String sAnimals = getString("Animals");
+			if( sAnimals != null )
+				colMap.put( "Animals", sAnimals );
+			String sStatus = getString("Status");
+			if( sStatus != null )
+				colMap.put( "Status", sStatus );
+			String sDaysInState = getString("DaysInState");
+			if( sDaysInState != null )
+				colMap.put( "DaysInState", sDaysInState );
+			String sDaysLeftInState = getString("DaysLeftInState");
+			if( sDaysLeftInState != null )
+				colMap.put( "DaysLeftInState", sDaysLeftInState );
 		}
+	}
+	
+	public static String mapColumn( String sColumnOut ) {
+		init();
+		return colMap.mapColumn( sColumnOut );
 	}
 	
 	private static Integer getInt(String sKey) {
@@ -67,7 +106,7 @@ public class ConfigFile {
 		String sRet = null;
 		String sValue = props.getProperty(sKey);
 		if( sValue == null ) {
-			Loggers.error("Cannot get value for " + sKey + " from JitterDot.config");
+			Loggers.getLogger().info("Cannot get value for " + sKey + " from JitterDot.config");
 		}
 		else {
 			sRet = sValue;
