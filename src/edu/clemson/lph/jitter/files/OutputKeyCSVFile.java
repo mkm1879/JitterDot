@@ -28,21 +28,42 @@ public class OutputKeyCSVFile {
 	}
 	
 	public void printRow( WorkingDataRow row ) {
-		printer.print(row.getOriginalKey());
-		printer.print(Integer.toString(row.getKey()));
-		printer.print(Integer.toString(row.getAnimals()));
-		printer.print(Integer.toString(row.getHouses()));
-		printer.print(row.getAnimalType());
-		printer.print(row.getIntegrator());
-		printer.print(Double.toString(row.getLongitudeIn()));
-		printer.print(Double.toString(row.getLatitudeIn()));
-		printer.print(Double.toString(row.getDK()));
-		printer.print(Double.toString(row.getLongitude()));
-		printer.print(Double.toString(row.getLatitude()));
-		printer.print(row.getStatus());
-		printer.print(Integer.toString(row.getDaysInState()));
-		printer.print(Integer.toString(row.getDaysLeftInState()));
+		put(row.getOriginalKey());
+		put(row.getKey());
+		put(row.getAnimals());
+		put(row.getHouses());
+		put(row.getAnimalType());
+		put(row.getIntegrator());
+		put(row.getLongitudeIn());
+		put(row.getLatitudeIn());
+		put(row.getDK());
+		put(row.getLongitude());
+		put(row.getLatitude());
+		put(row.getStatus());
+		put(row.getDaysInState());
+		put(row.getDaysLeftInState());
 		printer.println();
+	}
+	
+	private void put( String s ) {
+		if( s != null ) 
+			printer.print(s);
+		else
+			printer.print("");
+	}
+	
+	private void put( Integer i ) {
+		if( i != null && i != -1 ) 
+			printer.print(Integer.toString(i));
+		else
+			printer.print("");
+	}
+	
+	private void put( Double d ) {
+		if( d != null && d != -1 ) 
+			printer.print(Double.toString(d));
+		else
+			printer.print("");
 	}
 	
 	public void close() {

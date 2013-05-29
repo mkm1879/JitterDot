@@ -19,7 +19,7 @@ public class WorkingDataRow {
 	private int iKey = -1;
 	private double dLatitudeIn = -1.0;
 	private double dLongitudeIn = -1.0;
-	private String sAnimalType = null;
+	private String sAnimalTypeIn = null;
 	private String sIntegrator = null;
 	private int iHouses = -1;
 	private int iAnimals = -1;
@@ -34,6 +34,7 @@ public class WorkingDataRow {
 	private double dDLong = -1.0;
 	
 	// Output Fields
+	private String sAnimalType = null;
 	private double dLatitude = -1.0;
 	private double dLongitude = -1.0;
 	
@@ -45,7 +46,7 @@ public class WorkingDataRow {
 	 * @param dLongitude
 	 * @param sAnimalType
 	 */
-	public WorkingDataRow( String sOriginalKey, double dLatitude, double dLongitude, String sAnimalType ) throws InvalidCoordinateException {
+	public WorkingDataRow( String sOriginalKey, double dLatitude, double dLongitude, String sAnimalTypeIn ) throws InvalidCoordinateException {
 		if( !GPSTextField.isValidLatitude(dLatitude) )
 			throw new InvalidCoordinateException(dLatitude, "dLatitude");
 		if( !GPSTextField.isValidLongitude(dLongitude) )
@@ -53,7 +54,7 @@ public class WorkingDataRow {
 		this.sOriginalKey = sOriginalKey;
 		this.dLatitudeIn = dLatitude;
 		this.dLongitudeIn = dLongitude;
-		this.sAnimalType = sAnimalType;
+		this.sAnimalTypeIn = sAnimalTypeIn;
 	}
 	
 	/**
@@ -65,6 +66,22 @@ public class WorkingDataRow {
 			return true;
 		else
 			return false;
+	}
+	
+	/**
+	 * Compare rows to see if they count in dK.  Initially, only Animal Type is considered
+	 * as potentially differentiating and thus requiring different types in different K pools.
+	 * This is in a method to simplify maintenance if other attributes are determined to 
+	 * need grouping in K pools.
+	 * @param otherRow WorkingDataRow to compare with
+	 * @return true if the two rows match on key attributes and can therefore be pooled to make K
+	 * distinct entries.
+	 */
+	public boolean similarTo( WorkingDataRow otherRow ) {
+		boolean bRet = false;
+		if( getAnimalType().equals(otherRow.getAnimalType()) ) 
+			bRet = true;
+		return bRet;
 	}
 
 	/**
@@ -105,6 +122,22 @@ public class WorkingDataRow {
 	 */
 	public String getOriginalKey() {
 		return sOriginalKey;
+	}
+
+	/**
+	 * 
+	 * @return String Animal Type
+	 */
+	public String getAnimalTypeIn() {
+		return sAnimalTypeIn;
+	}
+
+	/**
+	 * 
+	 * @return String Animal Type
+	 */
+	public void setAnimalType( String sAnimalType ) {
+		this.sAnimalType = sAnimalType;
 	}
 
 	/**

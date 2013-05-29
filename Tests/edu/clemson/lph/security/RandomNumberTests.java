@@ -21,11 +21,19 @@ public class RandomNumberTests {
 	}
 
 	@Test
-	public void testNextDoubleDouble() {
+	public void testNextDoubleMax() {
 		double d = rn.nextDouble( 5.50 );
 		System.out.println( "Double(5.50) = " + d );
 		assertTrue(d >= 0.0 && d < 5.50 );
 	}
+
+	@Test
+	public void testNextDoubleMinMax() {
+		double d = rn.nextDouble( -5.50, 5.50 );
+		System.out.println( "Double(-5.50,5.50) = " + d );
+		assertTrue(d >= -5.50 && d < 5.50 );
+	}
+
 
 	@Test
 	public void testNextInt() {

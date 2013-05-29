@@ -3,8 +3,9 @@ package edu.clemson.lph.jitter.geometry;
 import edu.clemson.lph.jitter.structs.WorkingData;
 
 public class Distance {
-	private static final double DEG_PER_RAD = 180.0/Math.PI;
-	private static final double EARTH_RADIUS = 3963.1;
+	public static final double DEG_PER_RAD = 180.0/Math.PI;
+	public static final double EARTH_RADIUS = 3963.1676;
+	public static final double MILES_PER_DEGREE_LAT = 69.172;
 	
 	public static double getDistance( double dLat1Degrees, double dLong1Degrees, double dLat2Degrees, double dLong2Degrees )
 			 throws InvalidCoordinateException {
@@ -39,6 +40,10 @@ public class Distance {
 			}
 		}
 		return dRet;
+	}
+	
+	public static double milesPerDegreeLongitude( double dLatitude ) {
+		return (Distance.MILES_PER_DEGREE_LAT * Math.abs(Math.cos(dLatitude/Distance.DEG_PER_RAD)));
 	}
 	
 	public static double getMajorDistance( double dLat1Degrees, double dLong1Degrees, 

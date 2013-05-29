@@ -5,18 +5,20 @@ import static org.junit.Assert.*;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.Date;
+import java.lang.reflect.Method;
 
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import edu.clemson.lph.jitter.geometry.Distance;
 import edu.clemson.lph.jitter.geometry.InvalidCoordinateException;
 import edu.clemson.lph.jitter.structs.WorkingData;
+import edu.clemson.lph.jitter.structs.WorkingDataRow;
 
 public class LargeFilePerformanceTests {
 	private static final long MAX_RUN_TIME = 2;
-	private static final double TOLERANCE = 0.0001;
+	private static final double TOLERANCE = 1.0;
 	SourceCSVFile source;
 	WorkingData aData;
 	long timeStart;
@@ -53,8 +55,41 @@ public class LargeFilePerformanceTests {
 	@Test
 	public void testPerformance() {
 		long startTime = System.currentTimeMillis();
-		aData.calcDKs(5);
+		// Invoke private subroutine
+//		aData.calcDKs();
+		try {
+			Method method;
+			method = aData.getClass().getDeclaredMethod("calcDKs");
+			method.setAccessible(true);
+			method.invoke(aData);
+		} catch (Exception e1) {
+			e1.printStackTrace();
+			fail(e1.getMessage());
+		} 
 		System.out.println("calcDKs took " + (System.currentTimeMillis() - startTime ) + " milliseconds");
+		// Invoke private subroutine
+		try {
+			Method method;
+			method = aData.getClass().getDeclaredMethod("jitter");
+			method.setAccessible(true);
+			method.invoke(aData);
+		} catch (Exception e1) {
+			e1.printStackTrace();
+			fail(e1.getMessage());
+		} 
+		System.out.println("calcDKs and Jitter took " + (System.currentTimeMillis() - startTime ) + " milliseconds");
+		double dSumDiffDistDK = 0.0;
+		for( WorkingDataRow row : aData ) {
+			try {
+				double dDist = Distance.getDistance(row.getLatitudeIn(), row.getLongitudeIn(), row.getLatitude(), row.getLongitude());
+				System.out.println( row.getDK() + ", " + dDist + ", " + row.getDLat() + ", " + row.getDLong() );
+				dSumDiffDistDK += dDist  - row.getDK();
+			} catch (InvalidCoordinateException e) {
+				fail(e.getMessage());
+			}
+		}
+		assertTrue( Math.abs( dSumDiffDistDK / (1.0 * aData.size() ) ) < TOLERANCE); // Would really like to test distribution of these
+		System.out.println( dSumDiffDistDK / (1.0 * aData.size() ) ); 
 	}
 
 	@Test
@@ -62,7 +97,15 @@ public class LargeFilePerformanceTests {
 		try {
 			OutputKeyCSVFile fileOut = new OutputKeyCSVFile( new File( "TestOutLarge.csv") );
 			aData.setSortDirection();
-			aData.calcDKs(5);
+			try {
+				Method method;
+				method = aData.getClass().getDeclaredMethod("calcDKs");
+				method.setAccessible(true);
+				method.invoke(aData);
+			} catch (Exception e1) {
+				e1.printStackTrace();
+				fail(e1.getMessage());
+			} 
 			fileOut.print(aData);
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
@@ -71,12 +114,6 @@ public class LargeFilePerformanceTests {
 			e.printStackTrace();
 			fail(e.getMessage());
 		} catch (IOException e) {
-			e.printStackTrace();
-			fail(e.getMessage());
-		} catch (InvalidCoordinateException e) {
-			e.printStackTrace();
-			fail(e.getMessage());
-		} catch (InvalidInputException e) {
 			e.printStackTrace();
 			fail(e.getMessage());
 		} catch (Exception e) {

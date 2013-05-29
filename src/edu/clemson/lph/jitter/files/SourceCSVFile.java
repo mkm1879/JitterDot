@@ -111,7 +111,8 @@ public class SourceCSVFile {
 					}					
 				}
 			}
-			if( sOriginalKey == null || dLongitudeIn == null || dLatitudeIn == null || sAnimalType == null ) {
+			if( sOriginalKey == null || dLongitudeIn == null || dLatitudeIn == null || sAnimalType == null
+					|| ( dLongitudeIn < 0.0001 && dLatitudeIn < 0.0001 ) ) {
 				throw new InvalidInputException( "Invalid data on line " + parser.getLastLineNumber() );
 			}
 			WorkingDataRow dataRow = new WorkingDataRow( sOriginalKey, dLatitudeIn, dLongitudeIn, sAnimalType );

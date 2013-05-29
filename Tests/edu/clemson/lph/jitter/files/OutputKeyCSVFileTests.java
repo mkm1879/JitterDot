@@ -35,8 +35,7 @@ public class OutputKeyCSVFileTests {
 		try {
 			OutputKeyCSVFile fileOut = new OutputKeyCSVFile( new File( "TestOut.csv") );
 			WorkingData aData = source.getData();
-			aData.setSortDirection();
-			aData.calcDKs(5);
+			aData.deIdentify();
 			fileOut.print(aData);
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();

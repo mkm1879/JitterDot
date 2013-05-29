@@ -3,10 +3,13 @@ package edu.clemson.lph.jitter.structs;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 
+import edu.clemson.lph.jitter.files.ConfigFile;
 import edu.clemson.lph.jitter.geometry.Distance;
 import edu.clemson.lph.jitter.geometry.InvalidCoordinateException;
 import edu.clemson.lph.jitter.logger.Loggers;
+import edu.clemson.lph.security.RandomNumbers;
 
 
 @SuppressWarnings("serial")
@@ -14,11 +17,16 @@ public class WorkingData extends ArrayList<WorkingDataRow> {
 	public static final int SORT_NONE = -1;
 	public static final int SORT_SOUTH_NORTH = 0;
 	public static final int SORT_WEST_EAST = 1;
+	public static final double SQRT2 = Math.sqrt(2.0);
+
+	private int k;
+	private static final int altK = 3;
 	
 	private int iSortDirection = SORT_WEST_EAST;
 	private int iCurrentSort = SORT_NONE;
 	private int iNextKey = 0;
 	private ArrayList<Integer> randInts;
+	ArrayList<String> aSmallGroups = null;
 	private int iRows = 10000;
 	private Double dMinLong = null;
 	private Double dMaxLong = null;
@@ -27,6 +35,7 @@ public class WorkingData extends ArrayList<WorkingDataRow> {
 	private Double dMaxLat = null;
 	
 	public WorkingData() {
+		k = ConfigFile.getMinK();
 	}
 	
 	@Override
@@ -47,20 +56,20 @@ public class WorkingData extends ArrayList<WorkingDataRow> {
 		iRows = iNumRows;
 		// populate static randInts here so default size will work.
 		if( randInts == null ) {
-			randInts = randomPick(1, iRows);
+			randInts = RandomNumbers.randomPick(1, iRows);
 		}
-	}
-	
-	public void reshuffle() {
-		randInts = null;
 	}
 	
 	/**
 	 * Default and fall back is East West since most states are longer that direction.
 	 * @param iSort
 	 */
-	public void setSortDirection() throws Exception {
-		setSortDirection( getMajorAxis() );
+	public void setSortDirection() {
+		try {
+			setSortDirection( getMajorAxis() );
+		} catch (Exception e) {
+			Loggers.error(e.getMessage());
+		}
 	}
 
 	/**
@@ -187,6 +196,35 @@ public class WorkingData extends ArrayList<WorkingDataRow> {
 		}
 	}
 	
+	public ArrayList<String> getSmallGroups( int k ) {
+		ArrayList<String> aSmallGroups = new ArrayList<String>();
+		HashMap<String, Integer> hGroupSizes = new HashMap<String, Integer>();
+		for( WorkingDataRow currentRow : this ) {
+			String sAnimalType = currentRow.getAnimalTypeIn();
+			Integer iCount = hGroupSizes.get(sAnimalType);
+			if( iCount == null )
+				iCount = 1;
+			else
+				iCount++;
+			hGroupSizes.put(sAnimalType, iCount);
+		}
+		for( String sAnimalType : hGroupSizes.keySet() ) {
+			Integer iCount = hGroupSizes.get(sAnimalType);
+			if( iCount < k + 1 ) {
+				aSmallGroups.add(sAnimalType);
+			}
+		}
+		for( WorkingDataRow currentRow : this ) {
+			String sAnimalType = currentRow.getAnimalTypeIn();
+			Integer iCount = hGroupSizes.get(sAnimalType);
+			if( iCount >= k + 1 )
+				currentRow.setAnimalType(sAnimalType);
+			else
+				currentRow.setAnimalType("Other");
+		}
+		return aSmallGroups;
+	}
+	
 	/**
 	 * This method is much too complicated.  It involves iteration through all the rows 
 	 * then iterating through as many rows forward and backward to be sure we have found 
@@ -199,26 +237,28 @@ public class WorkingData extends ArrayList<WorkingDataRow> {
 	 * them as in the K closest, of course.
 	 * @param k this is the integer confidentiality level.
 	 */
-	public void calcDKs( int k ) {
+	private void calcDKs() {
 		int iSize = size();
 		// Wrap this in a test so we don't do over and over.
 		sortMajorAxis();
 		ArrayList<WorkingDataRow> dClosestRows = null;
 		ArrayList<Double> dClosest = null;
+		aSmallGroups = getSmallGroups(k);
+		WorkingDataRow currentRow = null;
 		// Could potentially simplify things by extracting this loop, but it is a very small part of the complexity.
 		for( int i = 0; i < iSize; i++ ) {
 			boolean bDone[] = {false,false};
 			dClosestRows = new ArrayList<WorkingDataRow>();
 			dClosest = new ArrayList<Double>();
-			WorkingDataRow currentRow = get(i);
+			currentRow = get(i);
 			for( int j = 1; j < iSize; j++ ) {
 				try {
 					WorkingDataRow nextRow = null;
 					if( ( i - j ) >= 0 && !bDone[0] ) {
 						nextRow = get( i - j );
-						if( nextRow != null ) {
-							if( dClosest.size() >= 5 ) {
-								Double dKCurrent =  dClosest.get(4);
+						if( nextRow != null && currentRow.similarTo(nextRow) ) {
+							if( dClosest.size() >= k ) {
+								Double dKCurrent =  dClosest.get(k-1);
 								if( getMajorDistance( currentRow, nextRow, iSortDirection ) > dKCurrent ) {
 									bDone[0] = true;
 									if( bDone[0] && bDone[1] )
@@ -238,9 +278,9 @@ public class WorkingData extends ArrayList<WorkingDataRow> {
 						bDone[0] = true;
 					if( ( i + j ) < iSize && !bDone[1] ) {
 						nextRow = get( i + j );
-						if( nextRow != null ) {
-							if( dClosest.size() >= 5 ) {
-								Double dKCurrent =  dClosest.get(4);
+						if( nextRow != null && currentRow.similarTo(nextRow) ) {
+							if( dClosest.size() >= k ) {
+								Double dKCurrent =  dClosest.get(k-1);
 								if( getMajorDistance( currentRow, nextRow, iSortDirection ) > dKCurrent ) {
 									bDone[1] = true;
 									if( bDone[0] && bDone[1] )
@@ -262,8 +302,20 @@ public class WorkingData extends ArrayList<WorkingDataRow> {
 					Loggers.error(e);
 				}
 			}
-			Double dK = dClosest.get(4);
-			currentRow.setDK(dK);
+			if( dClosest.size() >= k ) {
+				Double dK = dClosest.get(k-1);
+				currentRow.setDK(dK);
+			}
+			else if ( dClosest != null && dClosest.size() > altK - 1 && currentRow.getAnimalType().equals("Other") ) {
+				Double dK =  dClosest.get(dClosest.size()-1);
+				currentRow.setDK(dK);
+				Loggers.getLogger().info(currentRow.getAnimalTypeIn() + " animal type using " + dClosest.size() + " closest 'Other' premises.");
+			}
+			else {
+				Double dK = 0.0;
+				currentRow.setDK(dK);
+				Loggers.error("Not enough premises of type " + currentRow.getAnimalTypeIn() + " to get " + k + " closest " + currentRow.getAnimalType());
+			}
 			// TODO Calculate gold standard values and write test cases!
 		}
 	}
@@ -308,31 +360,57 @@ public class WorkingData extends ArrayList<WorkingDataRow> {
 				 throws InvalidCoordinateException {
 		return Distance.getMajorDistance(Row1.getLatitudeIn(), Row1.getLongitudeIn(), Row2.getLatitudeIn(), Row2.getLongitudeIn(), iSortDirection);
 	}
-
 	
-
 	/**
-	 * Will pick numbers randomly from the set of numbers between
-	 * startNumber (included) and endNumber (included).
-	 * @param startNumber
-	 * @param endNumber
-	 * @return
+	 * Process the whole structure ready for output.
 	 */
-	private static ArrayList<Integer> randomPick( int startNumber, int endNumber ) {
-	    // Generate a list of all numbers from start to endNumber
-	    ArrayList<Integer> numbers = new ArrayList<Integer>();
-	    for(int i = startNumber; i <= endNumber; i++) {
-	        numbers.add(i);
-	    }
-
-	    // Shuffle them
-	    Collections.shuffle(numbers);
-
-	    // Pick count items.
-	    return numbers;
+	public void deIdentify() {
+		setSortDirection();
+		calcDKs();
+		jitter();
 	}
 
+	private void jitter() {
+		RandomNumbers rn = new RandomNumbers();
+		WorkingDataRow aRow = get(0);
+		double dK = aRow.getDK();
+		if( dK < 0.0 ) {
+			Loggers.error("jitter() called before calcDKs");
+			return;
+		}
+		for( WorkingDataRow currentRow : this ) {
+			jitter( currentRow, rn );
+		}
+	}
 	
+	private void jitter( WorkingDataRow currentRow, RandomNumbers rn ) {
+		double dK = currentRow.getDK();
+		double dLatIn = currentRow.getLatitudeIn();
+		double dLongIn = currentRow.getLongitudeIn();
+		double dLat;
+		double dLong;
+		double dDeltaLat;
+		double dDeltaLong;
+		// Calculate average degrees latitude and longitude needed to move dK
+		dDeltaLat = (dK / Distance.MILES_PER_DEGREE_LAT)/SQRT2;
+		dDeltaLong = (dK / Distance.milesPerDegreeLongitude(dLatIn))/SQRT2;
+		currentRow.setDLat(dDeltaLat);
+		currentRow.setDLong(dDeltaLong);
+		// Move from twice the distance needed back to twice forward on each axis
+		// These will combine to create a distance sqrt( dLat^2 + dLong^2 )
+		// resulting in a left skewed (conservative) normal distribution of distance
+		// with a mean approximately dK and a median slightly higher.
+		dLat = dLatIn + rn.nextDouble((-2.0*dDeltaLat),(2.0*dDeltaLat));
+		dLong = dLongIn + rn.nextDouble((-2.0*dDeltaLong),(2.0*dDeltaLong));
+		try {
+			currentRow.setLatitude(dLat);
+			currentRow.setLongitude(dLong);
+		} catch (InvalidCoordinateException e) {
+			Loggers.error(e);
+		}
+	}
+	
+
 	class CompareDistance implements Comparator<WorkingDataRow> {
 		double dLat;
 		double dLong;

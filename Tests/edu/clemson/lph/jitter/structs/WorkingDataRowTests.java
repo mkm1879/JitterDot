@@ -72,7 +72,7 @@ public class WorkingDataRowTests {
 
 	@Test
 	public void testGetAnimalType() {
-		assertTrue( data.get(0).getAnimalType().equals("Animal Type"));
+		assertTrue( data.get(0).getAnimalTypeIn().equals("Animal Type"));
 	}
 
 	@Test
@@ -81,12 +81,12 @@ public class WorkingDataRowTests {
 	}
 
 	@Test
-	public void testGetDN() {
+	public void testGetDK() {
 		// fail("Not yet implemented");
 	}
 
 	@Test
-	public void testSetDN() {
+	public void testSetDK() {
 		// fail("Not yet implemented");
 	}
 

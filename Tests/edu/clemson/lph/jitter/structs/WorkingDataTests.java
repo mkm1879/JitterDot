@@ -5,12 +5,14 @@ import static org.junit.Assert.*;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.lang.reflect.Method;
 
 import org.junit.Before;
 import org.junit.Test;
 
 import edu.clemson.lph.jitter.files.InvalidInputException;
 import edu.clemson.lph.jitter.files.SourceCSVFile;
+import edu.clemson.lph.jitter.geometry.Distance;
 import edu.clemson.lph.jitter.geometry.InvalidCoordinateException;
 import edu.clemson.lph.jitter.geometry.UTMProjection;
 
@@ -39,22 +41,22 @@ public class WorkingDataTests {
 
 	@Test
 	public void testGetMaxLong() {
-		assertTrue( Math.abs(aData.getMaxLong() - (-80.647672) ) < TOLERANCE );
+		assertTrue( Math.abs(aData.getMaxLong() - (-79.611257) ) < TOLERANCE );
 	}
 
 	@Test
 	public void testGetMinLat() {
-		assertTrue( Math.abs(aData.getMinLat() - (33.825771) ) < TOLERANCE );
+		assertTrue( Math.abs(aData.getMinLat() - (32.986462) ) < TOLERANCE );
 	}
 
 	@Test
 	public void testGetMaxLat() {
-		assertTrue( Math.abs(aData.getMaxLat() - (34.787656) ) < TOLERANCE );
+		assertTrue( Math.abs(aData.getMaxLat() - (34.81479) ) < TOLERANCE );
 	}
 
 	@Test
 	public void testGetMedianLongEven() {
-		assertTrue( Math.abs(aData.getMedianLong() - (-81.6357) ) < TOLERANCE );
+		assertTrue( Math.abs(aData.getMedianLong() - (-81.088185) ) < TOLERANCE );
 	}
 	
 	@Test
@@ -80,7 +82,7 @@ public class WorkingDataTests {
 		try {
 			aData.setSortDirection(WorkingData.SORT_SOUTH_NORTH);
 			aData.sortMajorAxis();
-			assertTrue( aData.get(0).getOriginalKey().equals("32") );
+			assertTrue( aData.get(0).getOriginalKey().equals("187") );
 		} catch (Exception e) {
 			fail(e.getMessage());
 		}
@@ -102,8 +104,9 @@ public class WorkingDataTests {
 		File fileIn = new File( "Test2.csv");
 		try {
 			source = new SourceCSVFile( fileIn );
-			aData = source.getData();	
-			aData.setSortDirection(WorkingData.SORT_SOUTH_NORTH);
+			WorkingData aData2 = source.getData();	
+			aData2.setSortDirection(WorkingData.SORT_SOUTH_NORTH);
+			assertTrue( Math.abs(aData2.getMedianLong() - (-81.6194) ) < TOLERANCE );
 		} catch (FileNotFoundException e) {
 			fail(e.getMessage());
 		} catch (IOException e) {
@@ -117,11 +120,34 @@ public class WorkingDataTests {
 		} catch (Exception e) {
 			fail(e.getMessage());
 		}
-		assertTrue( Math.abs(aData.getMedianLong() - (-81.6194) ) < TOLERANCE );
 	}
 
 	@Test
 	public void testCalcDKs() {
-		aData.calcDKs(5);
+		// Invoke private subroutine
+		try {
+			Method method;
+			method = aData.getClass().getDeclaredMethod("calcDKs", Integer.class);
+			method.setAccessible(true);
+			method.invoke(aData, 5);
+		} catch (Exception e1) {
+			fail(e1.getMessage());
+		} 
+	}
+	
+	@Test
+	public void testJitter() {
+		aData.deIdentify();
+		double dSumDistance = 0.0;
+		for( WorkingDataRow row : aData ) {
+			try {
+				double dDist = Distance.getDistance(row.getLatitudeIn(), row.getLongitudeIn(), row.getLatitude(), row.getLongitude());
+				System.out.println( row.getDK() + ", " + dDist + ", " + row.getDLat() + ", " + row.getDLong() );
+				dSumDistance += dDist  - row.getDK();
+			} catch (InvalidCoordinateException e) {
+				fail(e.getMessage());
+			}
+		}
+		System.out.println( dSumDistance / (1.0 * aData.size() ) ); 
 	}
 }
