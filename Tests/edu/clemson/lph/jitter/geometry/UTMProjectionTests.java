@@ -91,8 +91,8 @@ public class UTMProjectionTests {
 	}
 	
 	
-	private void testProjectRow( double dLat, double dLong, double dNorth, double dEast ) {
-		double[] aCoords;
+	private void testProjectRow( Double dLat, Double dLong, Double dNorth, Double dEast ) {
+		Double[] aCoords;
 		try {
 			aCoords = projection.project(dLat, dLong);
 			assertTrue( Math.abs(aCoords[0] - dEast) < TOLERANCE  );

@@ -86,12 +86,16 @@ public class SourceCSVFile {
 					sIntegrator = sValue;
 				}
 				else if( ConfigFile.mapColumn("Longitude").equalsIgnoreCase(sColName) ) {
-					String sLongitude = GPSTextField.convertGPS(sValue);
-					dLongitudeIn = Double.parseDouble(sLongitude);
+					if( sValue != null && sValue.trim().length() > 0 && !"NULL".equalsIgnoreCase(sValue) ) {
+						String sLongitude = GPSTextField.convertGPS(sValue);
+						dLongitudeIn = Double.parseDouble(sLongitude);
+					}
 				}
 				else if( ConfigFile.mapColumn("Latitude").equalsIgnoreCase(sColName) ) {
-					String sLatitude = GPSTextField.convertGPS(sValue);
-					dLatitudeIn = Double.parseDouble(sLatitude);					
+					if( sValue != null && sValue.trim().length() > 0 && !"NULL".equalsIgnoreCase(sValue) ) {
+						String sLatitude = GPSTextField.convertGPS(sValue);
+						dLatitudeIn = Double.parseDouble(sLatitude);	
+					}
 				}
 				else if( ConfigFile.mapColumn("Status").equalsIgnoreCase(sColName) ) {
 					sStatus = sValue;
@@ -113,7 +117,11 @@ public class SourceCSVFile {
 			}
 			if( sOriginalKey == null || dLongitudeIn == null || dLatitudeIn == null || sAnimalType == null
 					|| ( dLongitudeIn < 0.0001 && dLatitudeIn < 0.0001 ) ) {
-				throw new InvalidInputException( "Invalid data on line " + parser.getLastLineNumber() );
+				//throw new InvalidInputException( "Invalid data on line " + parser.getLastLineNumber() );
+				// this was too drastic just skip this row.
+				Loggers.getLogger().info("Row " + sOriginalKey + " could not be used ");
+				aData.setRows(--iRows);
+				continue;
 			}
 			WorkingDataRow dataRow = new WorkingDataRow( sOriginalKey, dLatitudeIn, dLongitudeIn, sAnimalType );
 			if( iAnimals >= 0 )
@@ -121,7 +129,7 @@ public class SourceCSVFile {
 			if( iHouses >= 0 )
 				dataRow.setHouses(iHouses);
 			if( sIntegrator != null )
-				dataRow.setIntegrator(sIntegrator);
+				dataRow.setIntegratorIn(sIntegrator);
 			if( sStatus != null ) 
 				dataRow.setStatus(sStatus);
 			if( iDaysInState >= 0 )

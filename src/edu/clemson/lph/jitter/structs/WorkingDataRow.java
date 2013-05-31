@@ -17,10 +17,10 @@ public class WorkingDataRow {
 	// Fields
 	private String sOriginalKey;
 	private int iKey = -1;
-	private double dLatitudeIn = -1.0;
-	private double dLongitudeIn = -1.0;
+	private Double dLatitudeIn = null;
+	private Double dLongitudeIn = null;
 	private String sAnimalTypeIn = null;
-	private String sIntegrator = null;
+	private String sIntegratorIn = null;
 	private int iHouses = -1;
 	private int iAnimals = -1;
 	private String sStatus = null;
@@ -29,14 +29,18 @@ public class WorkingDataRow {
 	
 	
 	// Temporary Fields
-	private double dDK = -1.0;
-	private double dDLat = -1.0;
-	private double dDLong = -1.0;
+	private Double dDK = null;
+	private Double dDLat = null;
+	private Double dDLong = null;
 	
 	// Output Fields
 	private String sAnimalType = null;
-	private double dLatitude = -1.0;
-	private double dLongitude = -1.0;
+	private String sIntegrator = null;
+	private Double dLatitude = null;
+	private Double dLongitude = null;
+	private Double dEasting = null;
+	private Double dNorthing = null;
+	private Integer iUTMZone = null;
 	
 	
 	/**
@@ -46,7 +50,7 @@ public class WorkingDataRow {
 	 * @param dLongitude
 	 * @param sAnimalType
 	 */
-	public WorkingDataRow( String sOriginalKey, double dLatitude, double dLongitude, String sAnimalTypeIn ) throws InvalidCoordinateException {
+	public WorkingDataRow( String sOriginalKey, Double dLatitude, Double dLongitude, String sAnimalTypeIn ) throws InvalidCoordinateException {
 		if( !GPSTextField.isValidLatitude(dLatitude) )
 			throw new InvalidCoordinateException(dLatitude, "dLatitude");
 		if( !GPSTextField.isValidLongitude(dLongitude) )
@@ -102,17 +106,17 @@ public class WorkingDataRow {
 
 	/**
 	 * 
-	 * @return double Original Latitude
+	 * @return Double Original Latitude
 	 */
-	public double getLatitudeIn() {
+	public Double getLatitudeIn() {
 		return dLatitudeIn;
 	}
 
 	/**
 	 * 
-	 * @return double Original Longitude
+	 * @return Double Original Longitude
 	 */
-	public double getLongitudeIn() {
+	public Double getLongitudeIn() {
 		return dLongitudeIn;
 	}
 
@@ -152,8 +156,24 @@ public class WorkingDataRow {
 	 * 
 	 * @return String integrator
 	 */
+	public String getIntegratorIn() {
+		return sIntegratorIn;
+	}
+
+	/**
+	 * 
+	 * @param sIntegrator String integrator
+	 */
+	public void setIntegratorIn(String sIntegrator) {
+		this.sIntegratorIn = sIntegrator;
+	}
+
+	/**
+	 * 
+	 * @return String integrator
+	 */
 	public String getIntegrator() {
-		return sIntegrator;
+		return sIntegratorIn;
 	}
 
 	/**
@@ -161,70 +181,70 @@ public class WorkingDataRow {
 	 * @param sIntegrator String integrator
 	 */
 	public void setIntegrator(String sIntegrator) {
-		this.sIntegrator = sIntegrator;
+		this.sIntegratorIn = sIntegrator;
 	}
 
 	/**
 	 * 
-	 * @return double Distance to Nth nearest similar neighbor.
+	 * @return Double Distance to Nth nearest similar neighbor.
 	 */
-	public double getDK() {
+	public Double getDK() {
 		return dDK;
 	}
 
 	/**
 	 * 
-	 * @param dN double Distance to Nth nearest similar neighbor.
+	 * @param dN Double Distance to Nth nearest similar neighbor.
 	 */
-	public void setDK(double dK) {
+	public void setDK(Double dK) {
 		this.dDK = dK;
 	}
 
 	/**
 	 * 
-	 * @return double Delta Latitude needed
+	 * @return Double Delta Latitude needed
 	 */
-	public double getDLat() {
+	public Double getDLat() {
 		return dDLat;
 	}
 
 	/**
 	 * 
-	 * @param dLat double Delta Latitude needed
+	 * @param dLat Double Delta Latitude needed
 	 */
-	public void setDLat(double dLat) {
+	public void setDLat(Double dLat) {
 		this.dDLat = dLat;
 	}
 
 	/**
 	 * 
-	 * @return double Delta Longitude needed
+	 * @return Double Delta Longitude needed
 	 */
-	public double getDLong() {
+	public Double getDLong() {
 		return dDLong;
 	}
 
 	/**
 	 * 
-	 * @param dLong double Delta Latitude needed
+	 * @param dLong Double Delta Latitude needed
 	 */
-	public void setDLong(double dLong) {
+	public void setDLong(Double dLong) {
 		this.dDLong = dLong;
 	}
 
 	/**
 	 * 
-	 * @return double Jittered Latitude
+	 * @return Double Jittered Latitude
 	 */
-	public double getLatitude() {
+	public Double getLatitude() {
 		return dLatitude;
 	}
 
 	/**
 	 * 
-	 * @param dLatitude double Jittered Latitude
+	 * @param dLatitude Double Jittered Latitude
 	 */
-	public void setLatitude(double dLatitude) throws InvalidCoordinateException {
+	public void setLatitude(Double dLatitude) throws InvalidCoordinateException {
 		if( !GPSTextField.isValidLatitude(dLatitude) )
 			throw new InvalidCoordinateException(dLatitude, "setLatitude()");
 		this.dLatitude = dLatitude;
@@ -232,17 +252,17 @@ public class WorkingDataRow {
 
 	/**
 	 * 
-	 * @return double Jittered Longitude
+	 * @return Double Jittered Longitude
 	 */
-	public double getLongitude() {
+	public Double getLongitude() {
 		return dLongitude;
 	}
 
 	/**
 	 * 
-	 * @param dLongitude double Jittered Longitude
+	 * @param dLongitude Double Jittered Longitude
 	 */
-	public void setLongitude(double dLongitude) throws InvalidCoordinateException {
+	public void setLongitude(Double dLongitude) throws InvalidCoordinateException {
 		if( !GPSTextField.isValidLongitude(dLongitude) )
 			throw new InvalidCoordinateException(dLongitude, "setLongitude()");
 		this.dLongitude = dLongitude;
@@ -327,6 +347,30 @@ public class WorkingDataRow {
 	 */
 	public void setDaysLeftInState(int iDaysLeftInState) {
 		this.iDaysLeftInState = iDaysLeftInState;
+	}
+
+	public Double getEasting() {
+		return dEasting;
+	}
+
+	public void setEasting(Double dEasting) {
+		this.dEasting = dEasting;
+	}
+
+	public Double getNorthing() {
+		return dNorthing;
+	}
+
+	public void setNorthing(Double dNorthing) {
+		this.dNorthing = dNorthing;
+	}
+
+	public Integer getUTMZone() {
+		return iUTMZone;
+	}
+
+	public void setUTMZone(Integer iUTMZone) {
+		this.iUTMZone = iUTMZone;
 	}
 	
 

@@ -65,7 +65,7 @@ public class SourceCSVFileTests {
 			assertTrue( Math.abs(row2.getLatitudeIn() - 34.351887 ) < TOLERANCE );
 			assertTrue( row2.getAnimalTypeIn().equals("Turkey grow-out"));
 			assertTrue( row2.getStatus().equals("Susceptible"));
-			assertTrue( row2.getIntegrator().equals("A Farms"));
+			assertTrue( row2.getIntegratorIn().equals("A Farms"));
 			assertTrue( row2.getDaysInState() < 0 );
 			assertTrue( row2.getDaysLeftInState() < 0 );
 			assertTrue( row2.getAnimals() == 15500 );
@@ -75,7 +75,7 @@ public class SourceCSVFileTests {
 			assertTrue( Math.abs(row3.getLatitudeIn() - 34.550682 ) < TOLERANCE );
 			// Test odd characters and quoted field with comma.  Not meant to be a meaningful value.
 			assertTrue( row3.getAnimalTypeIn().equals("Broiler's, Pullets"));
-			assertTrue( row3.getIntegrator().equals("B Farms"));
+			assertTrue( row3.getIntegratorIn().equals("B Farms"));
 			int iRows = source.getRows();
 			WorkingDataRow rowLast = aData.get(iRows-1);
 			assertTrue( rowLast.getOriginalKey().equals("371"));

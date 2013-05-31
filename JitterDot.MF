@@ -1,0 +1,3 @@
+Manifest-Version: 1.0 
+Class-Path: . log4j.jar junit.jar ostermillerutils.jar proj4j.jar
+Main-Class: edu.clemson.lph.jitter.JitterDot

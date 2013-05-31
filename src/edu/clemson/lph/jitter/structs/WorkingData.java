@@ -8,6 +8,8 @@ import java.util.HashMap;
 import edu.clemson.lph.jitter.files.ConfigFile;
 import edu.clemson.lph.jitter.geometry.Distance;
 import edu.clemson.lph.jitter.geometry.InvalidCoordinateException;
+import edu.clemson.lph.jitter.geometry.InvalidUTMZoneException;
+import edu.clemson.lph.jitter.geometry.UTMProjection;
 import edu.clemson.lph.jitter.logger.Loggers;
 import edu.clemson.lph.security.RandomNumbers;
 
@@ -17,7 +19,7 @@ public class WorkingData extends ArrayList<WorkingDataRow> {
 	public static final int SORT_NONE = -1;
 	public static final int SORT_SOUTH_NORTH = 0;
 	public static final int SORT_WEST_EAST = 1;
-	public static final double SQRT2 = Math.sqrt(2.0);
+	public static final Double SQRT2 = Math.sqrt(2.0);
 
 	private int k;
 	private static final int altK = 3;
@@ -111,11 +113,11 @@ public class WorkingData extends ArrayList<WorkingDataRow> {
 	}
 	
 	private void calcStats() {
-		double dNextMinLat = 90.0;
-		double dNextMaxLat = -90.0;
+		Double dNextMinLat = 90.0;
+		Double dNextMaxLat = -90.0;
 
-		double dNextMinLong = 180.0;
-		double dNextMaxLong = -180.0;
+		Double dNextMinLong = 180.0;
+		Double dNextMaxLong = -180.0;
 		
 		for( WorkingDataRow row : this ) {
 			if( row.getLatitudeIn() < dNextMinLat )
@@ -351,12 +353,12 @@ public class WorkingData extends ArrayList<WorkingDataRow> {
 		
 	}
 	
-	private double getDistance( WorkingDataRow Row1, WorkingDataRow Row2 )
+	private Double getDistance( WorkingDataRow Row1, WorkingDataRow Row2 )
 				 throws InvalidCoordinateException {
 		return Distance.getDistance(Row1.getLatitudeIn(), Row1.getLongitudeIn(), Row2.getLatitudeIn(), Row2.getLongitudeIn());
 	}
 	
-	private double getMajorDistance( WorkingDataRow Row1, WorkingDataRow Row2, int iSortDirection )
+	private Double getMajorDistance( WorkingDataRow Row1, WorkingDataRow Row2, int iSortDirection )
 				 throws InvalidCoordinateException {
 		return Distance.getMajorDistance(Row1.getLatitudeIn(), Row1.getLongitudeIn(), Row2.getLatitudeIn(), Row2.getLongitudeIn(), iSortDirection);
 	}
@@ -366,14 +368,16 @@ public class WorkingData extends ArrayList<WorkingDataRow> {
 	 */
 	public void deIdentify() {
 		setSortDirection();
+		annonymizeIntegrator();
 		calcDKs();
 		jitter();
+		addUTMCoordinates();
 	}
 
 	private void jitter() {
 		RandomNumbers rn = new RandomNumbers();
 		WorkingDataRow aRow = get(0);
-		double dK = aRow.getDK();
+		Double dK = aRow.getDK();
 		if( dK < 0.0 ) {
 			Loggers.error("jitter() called before calcDKs");
 			return;
@@ -384,13 +388,13 @@ public class WorkingData extends ArrayList<WorkingDataRow> {
 	}
 	
 	private void jitter( WorkingDataRow currentRow, RandomNumbers rn ) {
-		double dK = currentRow.getDK();
-		double dLatIn = currentRow.getLatitudeIn();
-		double dLongIn = currentRow.getLongitudeIn();
-		double dLat;
-		double dLong;
-		double dDeltaLat;
-		double dDeltaLong;
+		Double dK = currentRow.getDK();
+		Double dLatIn = currentRow.getLatitudeIn();
+		Double dLongIn = currentRow.getLongitudeIn();
+		Double dLat;
+		Double dLong;
+		Double dDeltaLat;
+		Double dDeltaLong;
 		// Calculate average degrees latitude and longitude needed to move dK
 		dDeltaLat = (dK / Distance.MILES_PER_DEGREE_LAT)/SQRT2;
 		dDeltaLong = (dK / Distance.milesPerDegreeLongitude(dLatIn))/SQRT2;
@@ -406,14 +410,55 @@ public class WorkingData extends ArrayList<WorkingDataRow> {
 			currentRow.setLatitude(dLat);
 			currentRow.setLongitude(dLong);
 		} catch (InvalidCoordinateException e) {
+			Loggers.error("Latitude " + dLatIn + ", Longitude " + dLongIn + ", dK " + dK + " produced nonsense output");
 			Loggers.error(e);
 		}
 	}
 	
+	private void annonymizeIntegrator() {
+		HashMap<String, String> map = new HashMap<String, String>();
+		int iCo = 1;
+		for( WorkingDataRow row : this ) {
+			String sIntegrator = row.getIntegratorIn();
+			if( sIntegrator != null && sIntegrator.trim().length() > 0 && !map.containsKey(sIntegrator) ) {
+				map.put( sIntegrator, "Co" + Integer.toString(iCo++) );
+			}
+		}
+		for( WorkingDataRow row : this ) {
+			String sIntegrator = row.getIntegratorIn();
+			if( sIntegrator != null && sIntegrator.trim().length() > 0 ) {
+				row.setIntegrator( map.get(sIntegrator) );
+			}
+			
+		}
+	}
+	
+	private void addUTMCoordinates() {
+		int iZone = UTMProjection.getBestZone(getMedianLong());
+		try {
+			UTMProjection utm = new UTMProjection( iZone );
+			for( WorkingDataRow row : this ) {
+				// Work with already jittered coordinates
+				Double dLat = row.getLatitude();
+				Double dLong = row.getLongitude();
+				Double aCoords[] = utm.project(dLat, dLong);
+				row.setEasting(aCoords[0]);
+				row.setNorthing(aCoords[1]);
+				row.setUTMZone(iZone);
+			}
+		
+		} catch (InvalidUTMZoneException e) {
+			e.printStackTrace();
+			Loggers.error(e.getMessage());
+		} catch (InvalidCoordinateException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
 
 	class CompareDistance implements Comparator<WorkingDataRow> {
-		double dLat;
-		double dLong;
+		Double dLat;
+		Double dLong;
 		
 		public CompareDistance( WorkingDataRow dStart ) {
 			dLat = dStart.getLatitudeIn();
@@ -422,8 +467,8 @@ public class WorkingData extends ArrayList<WorkingDataRow> {
 		@Override
 		public int compare(WorkingDataRow arg0, WorkingDataRow arg1) {
 			try {
-				double dDist0 = Distance.getDistance(dLat, dLong, arg0.getLatitudeIn(), arg0.getLongitudeIn() );
-				double dDist1 = Distance.getDistance(dLat, dLong, arg1.getLatitudeIn(), arg1.getLongitudeIn() );
+				Double dDist0 = Distance.getDistance(dLat, dLong, arg0.getLatitudeIn(), arg0.getLongitudeIn() );
+				Double dDist1 = Distance.getDistance(dLat, dLong, arg1.getLatitudeIn(), arg1.getLongitudeIn() );
 				if( dDist0 < dDist1 )
 					return -1;
 				else if (dDist0 > dDist1 )

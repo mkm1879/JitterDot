@@ -18,6 +18,7 @@ import org.osgeo.proj4j.ProjCoordinate;
 public class UTMProjection {
 	private static final CoordinateTransformFactory ctFactory = new CoordinateTransformFactory();
 	private static final String WGS84_PARAM = "+title=long/lat:WGS84 +proj=longlat +datum=WGS84 +units=degrees";
+	//EPSG Projection 269[iZone] - NAD83 / UTM zone [iZone]N All units in meters.  See http://spatialreference.org/ref/epsg/269[iZone]/
 	private static final String UTM_NORTH_EPSG = "EPSG:269"; // Add zone number left padded with 0 to two digits
 	private int iZone;
 	private static HashMap<Integer, Double> zoneMap;
@@ -88,15 +89,15 @@ public class UTMProjection {
 		return iBest;
 	}
 	
-	public double[] project( double dLatDegrees, double dLongDegrees ) throws InvalidCoordinateException {
+	public Double[] project( Double dLatDegrees, Double dLongDegrees ) throws InvalidCoordinateException {
 		if( dLatDegrees < -90.0 || dLatDegrees > 90.0 ) {
 			throw new InvalidCoordinateException( dLatDegrees, "Latitude" );
 		}
 		if( dLongDegrees < -180.0 || dLongDegrees > 180.0 ) {
 			throw new InvalidCoordinateException( dLatDegrees, "Longitude" );
 		}
-		double[] aCoords = new double[2];
-		double x, y;
+		Double[] aCoords = new Double[2];
+		Double x, y;
 		// TODO Implement Proj4j calls as needed
 		ProjCoordinate p = new ProjCoordinate();
 		p.x = dLongDegrees;

@@ -25,8 +25,7 @@ public class LargeFilePerformanceTests {
 
 	@Before
 	public void setUp() throws Exception {
-		timeStart = System.currentTimeMillis();
-		File fileIn = new File( "BigTest.csv");
+		File fileIn = new File( "HerdsPlus.csv");
 		try {
 			source = new SourceCSVFile( fileIn );
 			aData = source.getData();	
@@ -56,7 +55,6 @@ public class LargeFilePerformanceTests {
 	public void testPerformance() {
 		long startTime = System.currentTimeMillis();
 		// Invoke private subroutine
-//		aData.calcDKs();
 		try {
 			Method method;
 			method = aData.getClass().getDeclaredMethod("calcDKs");
@@ -82,7 +80,6 @@ public class LargeFilePerformanceTests {
 		for( WorkingDataRow row : aData ) {
 			try {
 				double dDist = Distance.getDistance(row.getLatitudeIn(), row.getLongitudeIn(), row.getLatitude(), row.getLongitude());
-				System.out.println( row.getDK() + ", " + dDist + ", " + row.getDLat() + ", " + row.getDLong() );
 				dSumDiffDistDK += dDist  - row.getDK();
 			} catch (InvalidCoordinateException e) {
 				fail(e.getMessage());
@@ -95,25 +92,21 @@ public class LargeFilePerformanceTests {
 	@Test
 	public void testPrint() {
 		try {
-			OutputKeyCSVFile fileOut = new OutputKeyCSVFile( new File( "TestOutLarge.csv") );
-			aData.setSortDirection();
-			try {
-				Method method;
-				method = aData.getClass().getDeclaredMethod("calcDKs");
-				method.setAccessible(true);
-				method.invoke(aData);
-			} catch (Exception e1) {
-				e1.printStackTrace();
-				fail(e1.getMessage());
-			} 
+			long startTime = System.currentTimeMillis();
+			aData.deIdentify();
+			System.out.println("deIdentify took " + (System.currentTimeMillis() - startTime ) + " milliseconds");
+			startTime = System.currentTimeMillis();
+			OutputCSVFile fileOut = new OutputCSVFile( new File( "TestOutLarge.csv"), OutputCSVFile.OutputFileType.KEY );
 			fileOut.print(aData);
+			fileOut = new OutputCSVFile( new File( "TestOutLarge.csv"), OutputCSVFile.OutputFileType.NAADSM );
+			fileOut.print(aData);
+			fileOut = new OutputCSVFile( new File( "TestOutLarge.csv"), OutputCSVFile.OutputFileType.INTERSPREAD );
+			fileOut.print(aData);			
+			System.out.println("print took " + (System.currentTimeMillis() - startTime ) + " milliseconds");
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 			fail(e.getMessage());
 		} catch (NumberFormatException e) {
-			e.printStackTrace();
-			fail(e.getMessage());
-		} catch (IOException e) {
 			e.printStackTrace();
 			fail(e.getMessage());
 		} catch (Exception e) {
@@ -123,12 +116,5 @@ public class LargeFilePerformanceTests {
 		}
 	}
 
-	
-	@After
-	public void TearDown() throws Exception {
-		long timeEnd = System.currentTimeMillis();
-		System.out.println( "Runtime = " + ((timeEnd - timeStart)) + " milliseconds" );
-		assertTrue( timeEnd - timeStart < (MAX_RUN_TIME * 1000) );
-	}
 
 }

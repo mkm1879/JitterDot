@@ -127,10 +127,11 @@ public class WorkingDataTests {
 		// Invoke private subroutine
 		try {
 			Method method;
-			method = aData.getClass().getDeclaredMethod("calcDKs", Integer.class);
+			method = aData.getClass().getDeclaredMethod("calcDKs");
 			method.setAccessible(true);
-			method.invoke(aData, 5);
+			method.invoke(aData);
 		} catch (Exception e1) {
+			e1.printStackTrace();
 			fail(e1.getMessage());
 		} 
 	}

@@ -19,7 +19,7 @@ public class WorkingDataRowTests {
 		double dDelta = 0.5;
 		for( int i = 5; i > 0; i-- ) {
 			WorkingDataRow dNew = new WorkingDataRow( "Farm" + i, dLat, dLong, "Animal Type");
-			dNew.setIntegrator("A Farms");
+			dNew.setIntegratorIn("A Farms");
 			data.add(dNew);
 			dLat += dDelta;
 			dLong += dDelta;
@@ -77,7 +77,7 @@ public class WorkingDataRowTests {
 
 	@Test
 	public void testGetIntegrator() {
-		assertTrue( data.get(0).getIntegrator().equals("A Farms"));
+		assertTrue( data.get(0).getIntegratorIn().equals("A Farms"));
 	}
 
 	@Test

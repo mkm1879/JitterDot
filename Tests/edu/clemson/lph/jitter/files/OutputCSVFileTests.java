@@ -12,7 +12,7 @@ import org.junit.Test;
 import edu.clemson.lph.jitter.geometry.InvalidCoordinateException;
 import edu.clemson.lph.jitter.structs.WorkingData;
 
-public class OutputKeyCSVFileTests {
+public class OutputCSVFileTests {
 	private static final double TOLERANCE = 0.0001;
 	SourceCSVFile source;
 
@@ -33,9 +33,13 @@ public class OutputKeyCSVFileTests {
 	@Test
 	public void testPrint() {
 		try {
-			OutputKeyCSVFile fileOut = new OutputKeyCSVFile( new File( "TestOut.csv") );
 			WorkingData aData = source.getData();
 			aData.deIdentify();
+			OutputCSVFile fileOut = new OutputCSVFile( new File( "TestOut.csv"), OutputCSVFile.OutputFileType.KEY );
+			fileOut.print(aData);
+			fileOut = new OutputCSVFile( new File( "TestOut.csv"), OutputCSVFile.OutputFileType.NAADSM );
+			fileOut.print(aData);
+			fileOut = new OutputCSVFile( new File( "TestOut.csv"), OutputCSVFile.OutputFileType.INTERSPREAD );
 			fileOut.print(aData);
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();

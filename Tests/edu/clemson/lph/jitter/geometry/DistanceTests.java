@@ -23,6 +23,7 @@ public class DistanceTests {
 		try {
 			// Used existing, tested code from SQL Server to verify.
 			assertTrue( Math.abs(Distance.getDistance(34.301147, -81.625323, 34.334553, -81.645930) - 2.59327) < TOLERANCE);
+			System.err.println(Distance.getDistance(34.763760, -80.935660, 34.306178, -81.720549) + " : " + 54.7894);
 			assertTrue( Math.abs(Distance.getDistance(34.763760, -80.935660, 34.306178, -81.720549) - 54.7894) < TOLERANCE);
 			assertTrue( Math.abs(Distance.getDistance(34.398907, -81.611130, 34.242720, -81.758762) - 13.7054) < TOLERANCE);
 			assertTrue( Math.abs(Distance.getDistance(34.334553, -81.645930, 34.670167, -81.839500) - 25.703) < TOLERANCE);
@@ -41,7 +42,7 @@ public class DistanceTests {
 			assertTrue( Math.abs(Distance.getDistance(34.301147, -81.625323, 34.492518, -80.366799) - 73.0387) < TOLERANCE);
 			assertTrue( Math.abs(Distance.getDistance(34.300579, -81.682006, 34.532167, -80.628833) - 62.1933) < TOLERANCE);
 			assertTrue( Math.abs(Distance.getDistance(34.552780, -82.940730, 35.022848, -82.084167) - 58.5215) < TOLERANCE);
-//			System.out.println(Distance.getDistance(34.763760, -80.935660, 33.242394, -80.204648));
+			System.out.println(Distance.getDistance(34.763760, -80.935660, 33.242394, -80.204648));
 			// These all seem to be SQL Server rounding errors.
 			//		assertTrue( Math.abs(Distance.getDistance(34.763760, -80.935660, 33.242394, -80.204648) - 113.272) < TOLERANCE);
 			assertTrue( Math.abs(Distance.getDistance(34.763760, -80.935660, 33.242394, -80.204648) - 113.272) < TOLERANCE * 5);
@@ -93,7 +94,10 @@ public class DistanceTests {
 			assertTrue( Math.abs(Distance.getDistance(34.516083, -82.896583, 34.579700, -82.938850) - 5.01612) < TOLERANCE);
 			assertTrue( Math.abs(Distance.getDistance(33.809212, -81.432039, 33.787300, -81.300300) - 7.7225) < TOLERANCE);
 			
-			// From ArcGIS Using projection to SC State Plane and Point Distance tool in Anaysis Tools.  
+
+//			doArcGISComparison();
+
+			// From ArcGIS Using projection to SC State Plane and Point Distance tool in Analysis Tools.  
 			// Note that this results in some degree of disagreement but within 1/2 mile even for relatively long distances.
 			// Just empirically found limits when more than the basic loose tolerance of 1/10 mile.
 			assertTrue( Math.abs(Distance.getDistance(34.301147,-81.625323,34.334553,-81.64593) - 2.586296229) < LOOSE_TOLERANCE);
@@ -158,6 +162,70 @@ public class DistanceTests {
 			Loggers.error( e.getStackTrace() );
 			assertTrue(false);
 		}
+	}
+	
+	// Used to check whether modification to Earth Radius constant made comparison to ArcGIS better or worse.
+	// Constant used in 2008 SQL code was slightly better for this application than one used in other sample
+	// code found.  Reverted to EARTH_RADIUS = 3963.1
+	private void doArcGISComparison() throws InvalidCoordinateException {
+		double dDelta = 0.0;
+		dDelta += Math.abs(Distance.getDistance(34.301147,-81.625323,34.334553,-81.64593) - 2.586296229);
+		dDelta += Math.abs(Distance.getDistance(34.76376,-80.93566,34.306178,-81.720549) - 54.7614734);
+		dDelta += Math.abs(Distance.getDistance(34.398907,-81.61113,34.24272,-81.758762) - 13.67940038);
+		dDelta += Math.abs(Distance.getDistance(34.334553,-81.64593,34.670167,-81.8395) - 25.63303482);
+		dDelta += Math.abs(Distance.getDistance(34.536983,-83.005,34.474952,-81.295981) - 97.60378357);
+		dDelta += Math.abs(Distance.getDistance(34.349833,-81.987,33.825714,-81.422653) - 48.49247409);
+		dDelta += Math.abs(Distance.getDistance(34.306178,-81.720549,33.936811,-81.480422) - 28.93655688);
+		dDelta += Math.abs(Distance.getDistance(34.24272,-81.758762,34.85433,-81.36566) - 47.74497142);
+		dDelta += Math.abs(Distance.getDistance(34.670167,-81.8395,35.034,-82.533) - 46.7126621);
+		dDelta += Math.abs(Distance.getDistance(34.474952,-81.295981,34.648878,-80.666574) - 37.83760016);
+		dDelta += Math.abs(Distance.getDistance(33.825714,-81.422653,34.575833,-80.3415) - 80.65193143);
+		dDelta += Math.abs(Distance.getDistance(33.936811,-81.480422,34.532089,-81.301201) - 42.2872174);
+		dDelta += Math.abs(Distance.getDistance(34.85433,-81.36566,34.77198,-80.91467) - 26.26052078);
+		dDelta += Math.abs(Distance.getDistance(35.034,-82.533,34.710643,-81.119378) - 83.34664313);
+		dDelta += Math.abs(Distance.getDistance(34.575833,-80.3415,34.351531,-81.560489) - 71.28210877);
+		dDelta += Math.abs(Distance.getDistance(34.532089,-81.301201,34.19,-81.505667) - 26.31359893);
+		dDelta += Math.abs(Distance.getDistance(34.301147,-81.625323,34.492518,-80.366799) - 73.09822648);
+		dDelta += Math.abs(Distance.getDistance(34.300579,-81.682006,34.532167,-80.628833) - 62.23487446);
+		dDelta += Math.abs(Distance.getDistance(34.55278,-82.94073,35.022848,-82.084167) - 58.50414576);
+		dDelta += Math.abs(Distance.getDistance(34.76376,-80.93566,33.242394,-80.204648) - 112.92386);
+		dDelta += Math.abs(Distance.getDistance(34.398907,-81.61113,33.242394,-80.204648) - 113.5530826);
+		dDelta += Math.abs(Distance.getDistance(34.334553,-81.64593,33.242394,-80.204648) - 111.9821602);
+		dDelta += Math.abs(Distance.getDistance(34.536983,-83.005,34.01717,-81.8406) - 75.63584576);
+		dDelta += Math.abs(Distance.getDistance(34.349833,-81.987,34.797001,-81.279381) - 50.76855133);
+		dDelta += Math.abs(Distance.getDistance(34.306178,-81.720549,34.499013,-80.011036) - 98.55626703);
+		dDelta += Math.abs(Distance.getDistance(34.24272,-81.758762,34.465,-80.443167) - 76.74113797);
+		dDelta += Math.abs(Distance.getDistance(34.670167,-81.8395,34.4536,-80.5228) - 76.54654466);
+		dDelta += Math.abs(Distance.getDistance(34.474952,-81.295981,34.036,-81.9358) - 47.49328164);
+		dDelta += Math.abs(Distance.getDistance(33.825714,-81.422653,34.69585,-79.76122) - 112.3988205);
+		dDelta += Math.abs(Distance.getDistance(33.936811,-81.480422,33.702833,-81.344167) - 17.92655351);
+		dDelta += Math.abs(Distance.getDistance(34.85433,-81.36566,33.75783,-81.41967) - 75.6320878);
+		dDelta += Math.abs(Distance.getDistance(35.034,-82.533,34.329658,-80.492198) - 125.9338578);
+		dDelta += Math.abs(Distance.getDistance(34.648878,-80.666574,34.364836,-79.56654) - 65.74575615);
+		dDelta += Math.abs(Distance.getDistance(34.575833,-80.3415,33.652667,-81.104833) - 77.21134188);
+		dDelta += Math.abs(Distance.getDistance(34.532089,-81.301201,33.28622,-80.905713) - 88.80946978);
+		dDelta += Math.abs(Distance.getDistance(34.77198,-80.91467,33.283333,-80.903) - 102.5896458);
+		dDelta += Math.abs(Distance.getDistance(33.8335,-81.52033,33.692352,-81.519611) - 9.726182968);
+		dDelta += Math.abs(Distance.getDistance(33.865653,-81.395219,33.8428,-81.511) - 6.840156658);
+		dDelta += Math.abs(Distance.getDistance(33.9172,-81.6732,33.9955,-81.6532) - 5.516524348);
+		dDelta += Math.abs(Distance.getDistance(34.025647,-81.547731,33.964338,-81.477846) - 5.825742037);
+		dDelta += Math.abs(Distance.getDistance(33.910248,-81.371487,33.8403,-81.284) - 6.965535638);
+		dDelta += Math.abs(Distance.getDistance(34.137873,-81.714984,34.0928,-81.6255) - 5.996201027);
+		dDelta += Math.abs(Distance.getDistance(33.881372,-81.490004,33.787542,-81.443486) - 6.997153392);
+		dDelta += Math.abs(Distance.getDistance(34.0928,-81.6255,33.98767,-81.67567) - 7.795434416);
+		dDelta += Math.abs(Distance.getDistance(34.0012,-81.6403,33.98983,-81.68917) - 2.91237597);
+		dDelta += Math.abs(Distance.getDistance(33.777071,-81.34999,33.6668,-81.4482) - 9.471716757);
+		dDelta += Math.abs(Distance.getDistance(33.842661,-81.354825,33.87783,-81.35283) - 2.426152832);
+		dDelta += Math.abs(Distance.getDistance(33.857619,-81.516749,33.757,-81.50767) - 6.953061199);
+		dDelta += Math.abs(Distance.getDistance(33.873636,-81.441302,33.7505,-81.3928) - 8.931890426);
+		dDelta += Math.abs(Distance.getDistance(33.98767,-81.67567,34.0305,-81.53983) - 8.33562318);
+		dDelta += Math.abs(Distance.getDistance(33.87783,-81.35283,33.823248,-81.503489) - 9.443305189);
+		dDelta += Math.abs(Distance.getDistance(33.757,-81.50767,33.69633,-81.5015) - 4.195629488);
+		dDelta += Math.abs(Distance.getDistance(33.823248,-81.503489,33.855996,-81.518493) - 2.415903824);
+		dDelta += Math.abs(Distance.getDistance(33.80433,-81.5315,33.68293,-81.454178) - 9.475753652);
+		dDelta += Math.abs(Distance.getDistance(34.516083,-82.896583,34.5797,-82.93885) - 5.003606849);
+		dDelta += Math.abs(Distance.getDistance(33.809212,-81.432039,33.7873,-81.3003) - 7.727723422);
+        System.out.println(dDelta);
 	}
 
 	@Test(expected=InvalidCoordinateException.class)
