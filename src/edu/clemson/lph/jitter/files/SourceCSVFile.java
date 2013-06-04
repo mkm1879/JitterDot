@@ -10,6 +10,7 @@ import java.io.IOException;
 import com.Ostermiller.util.*;
 
 import edu.clemson.lph.controls.GPSTextField;
+import edu.clemson.lph.jitter.JitterDot;
 import edu.clemson.lph.jitter.geometry.InvalidCoordinateException;
 import edu.clemson.lph.jitter.logger.Loggers;
 import edu.clemson.lph.jitter.structs.ColumnNameMap;
@@ -27,6 +28,7 @@ public class SourceCSVFile {
 		iRows = getRowCount(fIn);
 		parser = new LabeledCSVParser( new ExcelCSVParser( new FileInputStream( fInput )));
 		aColumns = parser.getLabels();
+		WorkingData.setColumns(aColumns);
 	}
 	
 	public String[] getColumns() {
@@ -36,6 +38,7 @@ public class SourceCSVFile {
 	/**
 	 * This is the guts of the Source File implementation.  Take the parser and read all the rows into 
 	 * instances of our data structure working data.
+	 * This is the longest running method in the program.  Not sure if it can be optimized.
 	 * @return ArrayList of Original Data with generated new key value.
 	 * @throws IOException Mainly when problems with the source file arise
 	 * @throws NumberFormatException When converting fields in CSV to numberic (double or int)
@@ -47,6 +50,7 @@ public class SourceCSVFile {
 		aData.setRows(iRows);
 		String aLine[] = null;
 		while( (aLine = parser.getLine()) != null ) {
+			WorkingDataRow dataRow = null;
 			String sOriginalKey = null;
 			Double dLatitudeIn = null;
 			Double dLongitudeIn = null;
@@ -115,15 +119,18 @@ public class SourceCSVFile {
 					}					
 				}
 			}
-			if( sOriginalKey == null || dLongitudeIn == null || dLatitudeIn == null || sAnimalType == null
-					|| ( dLongitudeIn < 0.0001 && dLatitudeIn < 0.0001 ) ) {
-				//throw new InvalidInputException( "Invalid data on line " + parser.getLastLineNumber() );
-				// this was too drastic just skip this row.
+			try {
+				dataRow = new WorkingDataRow( aLine, sOriginalKey, dLatitudeIn, dLongitudeIn, sAnimalType );
+			} catch( InvalidCoordinateException e ) {
+				dataRow = null;
+			}
+			if( dataRow == null || sOriginalKey == null || dLongitudeIn == null || dLatitudeIn == null || sAnimalType == null
+					|| ( Math.abs(dLongitudeIn) < 0.0001 && Math.abs(dLatitudeIn) < 0.0001 ) ) {
 				Loggers.getLogger().info("Row " + sOriginalKey + " could not be used ");
+				JitterDot.fileError.printErrorRow("Row missing required data", aLine);
 				aData.setRows(--iRows);
 				continue;
 			}
-			WorkingDataRow dataRow = new WorkingDataRow( sOriginalKey, dLatitudeIn, dLongitudeIn, sAnimalType );
 			if( iAnimals >= 0 )
 				dataRow.setAnimals(iAnimals);
 			if( iHouses >= 0 )

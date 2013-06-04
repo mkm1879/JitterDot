@@ -23,7 +23,7 @@ public class DistanceTests {
 		try {
 			// Used existing, tested code from SQL Server to verify.
 			assertTrue( Math.abs(Distance.getDistance(34.301147, -81.625323, 34.334553, -81.645930) - 2.59327) < TOLERANCE);
-			System.err.println(Distance.getDistance(34.763760, -80.935660, 34.306178, -81.720549) + " : " + 54.7894);
+//			System.err.println(Distance.getDistance(34.763760, -80.935660, 34.306178, -81.720549) + " : " + 54.7894);
 			assertTrue( Math.abs(Distance.getDistance(34.763760, -80.935660, 34.306178, -81.720549) - 54.7894) < TOLERANCE);
 			assertTrue( Math.abs(Distance.getDistance(34.398907, -81.611130, 34.242720, -81.758762) - 13.7054) < TOLERANCE);
 			assertTrue( Math.abs(Distance.getDistance(34.334553, -81.645930, 34.670167, -81.839500) - 25.703) < TOLERANCE);

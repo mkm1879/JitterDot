@@ -143,12 +143,12 @@ public class WorkingDataTests {
 		for( WorkingDataRow row : aData ) {
 			try {
 				double dDist = Distance.getDistance(row.getLatitudeIn(), row.getLongitudeIn(), row.getLatitude(), row.getLongitude());
-				System.out.println( row.getDK() + ", " + dDist + ", " + row.getDLat() + ", " + row.getDLong() );
+//				System.out.println( row.getDK() + ", " + dDist + ", " + row.getDLat() + ", " + row.getDLong() );
 				dSumDistance += dDist  - row.getDK();
 			} catch (InvalidCoordinateException e) {
 				fail(e.getMessage());
 			}
 		}
-		System.out.println( dSumDistance / (1.0 * aData.size() ) ); 
+		System.out.println( "Avg dist - dK = " + dSumDistance / (1.0 * aData.size() ) ); 
 	}
 }

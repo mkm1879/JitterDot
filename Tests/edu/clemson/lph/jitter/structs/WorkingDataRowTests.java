@@ -18,7 +18,7 @@ public class WorkingDataRowTests {
 		double dLong = -81.9;
 		double dDelta = 0.5;
 		for( int i = 5; i > 0; i-- ) {
-			WorkingDataRow dNew = new WorkingDataRow( "Farm" + i, dLat, dLong, "Animal Type");
+			WorkingDataRow dNew = new WorkingDataRow( new String[] {"Farm","dlat","dlong","Antype"}, "Farm" + i, dLat, dLong, "Animal Type");
 			dNew.setIntegratorIn("A Farms");
 			data.add(dNew);
 			dLat += dDelta;
@@ -30,7 +30,7 @@ public class WorkingDataRowTests {
 	public void testWorkingData() {
 		WorkingDataRow dNew;
 		try {
-			dNew = new WorkingDataRow( "FarmX", 35.0, -81.0, "Animal Type");
+			dNew = new WorkingDataRow( new String[] {"Farm","dlat","dlong","Antype"}, "FarmX", 35.0, -81.0, "Animal Type");
 			assertTrue( dNew != null );
 		} catch (InvalidCoordinateException e) {
 			fail(e.getMessage());
@@ -43,9 +43,9 @@ public class WorkingDataRowTests {
 	public void testEqualsObject() {
 		WorkingDataRow dNew;
 		try {
-			dNew = new WorkingDataRow( "FarmX", 35.0, -81.0, "Animal Type");
+			dNew = new WorkingDataRow( new String[] {"Farm","dlat","dlong","Antype"}, "FarmX", 35.0, -81.0, "Animal Type");
 			data.add(dNew);
-			WorkingDataRow dNew2 = new WorkingDataRow( "FarmX", 35.0, -81.0, "Animal Type");
+			WorkingDataRow dNew2 = new WorkingDataRow( new String[] {"Farm","dlat","dlong","Antype"}, "FarmX", 35.0, -81.0, "Animal Type");
 			data.add(dNew2);
 			assertFalse( dNew.equals(dNew2) );
 		} catch (InvalidCoordinateException e) {

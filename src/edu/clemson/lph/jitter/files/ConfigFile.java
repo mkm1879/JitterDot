@@ -1,8 +1,15 @@
 package edu.clemson.lph.jitter.files;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.util.ArrayList;
 import java.util.Properties;
 
 import edu.clemson.lph.jitter.logger.Loggers;
@@ -10,9 +17,14 @@ import edu.clemson.lph.jitter.structs.ColumnNameMap;
 
 public class ConfigFile {
 	private static Properties props = null;
-	private static ColumnNameMap colMap = null;
+//	private static ColumnNameMap colMap = null;
+	private static ArrayList<String> lines;
 	
-	private static void init() {
+	/**
+	 * Load the Properties object to read values.  We don't read based on section.
+	 */
+
+	private static void initRead() {
 		if( props == null ) {
 			props = new Properties();
 			try {
@@ -24,48 +36,24 @@ public class ConfigFile {
 				System.err.println( "Cannot load JitterDot.config" );
 				Loggers.error(e);
 			}
-			colMap = new ColumnNameMap();
-			// List all common column names and add to map if translations are found
-			String sOriginalKey = getString("OriginalKey");
-			if( sOriginalKey != null )
-				colMap.put( "OriginalKey", sOriginalKey );
-			String sLatitude = getString("Latitude");
-			if( sLatitude!= null )
-				colMap.put( "Latitude", sLatitude );
-			String sLongitude = getString("Longitude");
-			if( sLongitude!= null )
-				colMap.put( "Longitude", sLongitude );
-			String sAnimalType = getString("AnimalType");
-			if( sAnimalType != null )
-				colMap.put("AnimalType", sAnimalType );
-			String sIntegrator = getString("Integrator");
-			if( sIntegrator != null )
-				colMap.put( "Integrator", sIntegrator );
-			String sHouses = getString("Houses");
-			if( sHouses != null )
-				colMap.put( "Houses", sHouses );
-			String sAnimals = getString("Animals");
-			if( sAnimals != null )
-				colMap.put( "Animals", sAnimals );
-			String sStatus = getString("Status");
-			if( sStatus != null )
-				colMap.put( "Status", sStatus );
-			String sDaysInState = getString("DaysInState");
-			if( sDaysInState != null )
-				colMap.put( "DaysInState", sDaysInState );
-			String sDaysLeftInState = getString("DaysLeftInState");
-			if( sDaysLeftInState != null )
-				colMap.put( "DaysLeftInState", sDaysLeftInState );
 		}
 	}
 	
+	/**
+	 * Find the column name in the input file that matches the output column
+	 * @param sColumnOut output column.
+	 * @return String input column name.
+	 */
 	public static String mapColumn( String sColumnOut ) {
-		init();
-		return colMap.mapColumn( sColumnOut );
+		initRead();
+		String sColumnIn = props.getProperty(sColumnOut);
+		if( sColumnIn == null ) 
+			sColumnIn = sColumnOut;
+		return sColumnIn;
 	}
 	
 	private static Integer getInt(String sKey) {
-		init();
+		initRead();
 		Integer iRet = null;
 		String sValue = props.getProperty(sKey);
 		if( sValue == null ) {
@@ -84,7 +72,7 @@ public class ConfigFile {
 	
 	@SuppressWarnings("unused")
 	private static Double getDouble(String sKey) {
-		init();
+		initRead();
 		Double dRet = null;
 		String sValue = props.getProperty(sKey);
 		if( sValue == null ) {
@@ -102,7 +90,7 @@ public class ConfigFile {
 	}
 	
 	private static String getString(String sKey) {
-		init();
+		initRead();
 		String sRet = null;
 		String sValue = props.getProperty(sKey);
 		if( sValue == null ) {
@@ -114,14 +102,27 @@ public class ConfigFile {
 		return sRet;
 	}
 	
+	/**
+	 * Get the value of K in our privacy setting.
+	 * @return minimum K annonymity required
+	 */
 	public static Integer getMinK() {
 		return getInt("MinK");
 	}
 	
+	/**
+	 * Get the value of the smallest grouping of animal types for calculation of K distance
+	 * @return Integer minimum group size.  Uses K if not otherwise specified.
+	 */
 	public static Integer getMinGroup() {
-		return getInt("MinGroup");
+		Integer iGroup = getInt("MinGroup");
+		if( iGroup == null )
+			iGroup = getMinK();
+		return iGroup;
 	}
 	
+	
+	// Currently not using user configured UTMZones but calculating from median longitude.
 	public static Integer getUTMZoneNum() {
 		Integer iRet = null;
 		String sZone = getString("UTMZone");
@@ -141,7 +142,8 @@ public class ConfigFile {
 		}
 		return iRet;
 	}
-	
+
+	// Currently not using user configured UTMZones but calculating from median longitude.
 	public static String getZoneHemisphere() {
 		String sRet = null;
 		String sZone = getString("UTMZone");
@@ -157,6 +159,94 @@ public class ConfigFile {
 			}
 		}
 		return sRet;
+	}
+	
+	/**
+	 * Convenience method for setting field mappings.
+	 * @param sField
+	 * @param sMappedTo
+	 */
+	public static void setFieldMap( String sField, String sMappedTo ) {
+		setValue( sField, sMappedTo, "Field Mappings");
+	}
+	
+	/**
+	 * Set the value of a property in a section of the file
+	 * @param sProp String property left of the =
+	 * @param sValue String value to the right of the =
+	 * @param sSection String that follows # in section header comment.  Requires just enough to be unique.
+	 */
+	public static void setValue( String sProp, String sValue, String sSection ) {
+		initRead();
+		initWrite();
+		
+		String sOldMap = props.getProperty(sProp);
+		props.put(sProp, sValue);
+		if( sOldMap != null ) {
+			if( sOldMap.equals(sValue) )
+				return;
+			else {
+				for( int i = 0; i < lines.size(); i++ ) {
+					String sLine = lines.get(i);
+					if( sLine.startsWith(sProp + "=") ) {
+						lines.remove(i);
+						lines.add(i, sProp + "=" + sValue);
+					}
+				}
+			}
+		}
+		else {
+			boolean bSection = false;
+			for( int i = 0; i < lines.size(); i++ ) {
+				String sLine = lines.get(i);
+				if( sLine.startsWith("#" + sSection))
+					bSection = true;
+				if( bSection && sLine.trim().length() == 0 ) {
+					lines.add(i, sProp + "=" + sValue);
+					break;
+				}
+			}
+
+		}
+	}
+	
+	/**
+	 * We don't use props.store because it loses sections and comments.
+	 * The save commands edit a literal representation of the lines in the file.
+	 * This saves the config settings back to the config file.
+	 */	
+	public static void saveConfig() {
+		if( lines == null ) return;
+		try {
+			PrintWriter pw = new PrintWriter( new FileWriter( new File( "JitterDot.config.txt") ) );
+			for( String sLine : lines ) {
+				pw.println(sLine);
+			}
+			pw.close();
+		} catch (IOException e) {
+			Loggers.error(e);
+		}
+	}
+	
+	/**
+	 * We don't use props.store because it loses sections and comments.
+	 * The save commands edit a literal representation of the lines in the file.
+	 * This creates the array of lines for use in all set commands.
+	 */
+	private static void initWrite() {
+		if( lines == null ) {
+			lines = new ArrayList<String>();
+			try {
+				BufferedReader br = new BufferedReader( new FileReader( new File("JitterDot.config")));
+				String sLine = null;
+				while( (sLine = br.readLine()) != null ) {
+					lines.add(sLine);
+				}
+				br.close();
+			} catch (IOException e) {
+				Loggers.error(e);
+			}
+		}
 	}
 
 }

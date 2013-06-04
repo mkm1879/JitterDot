@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 
+import edu.clemson.lph.jitter.JitterDot;
 import edu.clemson.lph.jitter.files.ConfigFile;
 import edu.clemson.lph.jitter.geometry.Distance;
 import edu.clemson.lph.jitter.geometry.InvalidCoordinateException;
@@ -20,6 +21,8 @@ public class WorkingData extends ArrayList<WorkingDataRow> {
 	public static final int SORT_SOUTH_NORTH = 0;
 	public static final int SORT_WEST_EAST = 1;
 	public static final Double SQRT2 = Math.sqrt(2.0);
+	public static final Double MAX_LONGITUDE_DISTANCE = 45.0;
+	public static String[] aColumns;
 
 	private int k;
 	private static final int altK = 3;
@@ -36,8 +39,14 @@ public class WorkingData extends ArrayList<WorkingDataRow> {
 	private Double dMinLat = null;
 	private Double dMaxLat = null;
 	
+	private ArrayList<WorkingDataRow> aRemovedRows = new ArrayList<WorkingDataRow>();
+	
 	public WorkingData() {
 		k = ConfigFile.getMinK();
+	}
+	
+	public static void setColumns( String[] aColumns) {
+		WorkingData.aColumns = aColumns;
 	}
 	
 	@Override
@@ -227,6 +236,15 @@ public class WorkingData extends ArrayList<WorkingDataRow> {
 		return aSmallGroups;
 	}
 	
+	private void sanityCheck() {
+		for( WorkingDataRow row : this ) {
+			if( Math.abs( row.getLongitudeIn() - getMedianLong() ) > MAX_LONGITUDE_DISTANCE ) {
+				Loggers.error( "Wild Longitude (" + row.getLongitudeIn() + " in row " + row.getOriginalKey() );
+				removeRow("Wild Longitude", row);			
+			}
+		}
+	}
+	
 	/**
 	 * This method is much too complicated.  It involves iteration through all the rows 
 	 * then iterating through as many rows forward and backward to be sure we have found 
@@ -268,12 +286,12 @@ public class WorkingData extends ArrayList<WorkingDataRow> {
 								}
 								// Didn't short circuit backward
 								else {
-									checkRow( currentRow, nextRow, dClosestRows, dClosest, k );
+									checkNextRowDistance( currentRow, nextRow, dClosestRows, dClosest, k );
 								}
 							}
 							// Didn't have enough to test 
 							else
-								checkRow( currentRow, nextRow, dClosestRows, dClosest, k );
+								checkNextRowDistance( currentRow, nextRow, dClosestRows, dClosest, k );
 						}
 					}
 					else 
@@ -290,18 +308,19 @@ public class WorkingData extends ArrayList<WorkingDataRow> {
 								}
 								// Didn't short circuit forward
 								else {
-									checkRow( currentRow, nextRow, dClosestRows, dClosest, k );
+									checkNextRowDistance( currentRow, nextRow, dClosestRows, dClosest, k );
 								}
 							}
 							// Didn't have enough to test
 							else
-								checkRow( currentRow, nextRow, dClosestRows, dClosest, k );
+								checkNextRowDistance( currentRow, nextRow, dClosestRows, dClosest, k );
 						}
 					}
 					else 
 						bDone[1] = true;
 				} catch (InvalidCoordinateException e) {
-					Loggers.error(e);
+					Loggers.error("Unable to calculate dK", e);
+					removeRow("Nonsense Jitter", currentRow);
 				}
 			}
 			if( dClosest.size() >= k ) {
@@ -317,13 +336,23 @@ public class WorkingData extends ArrayList<WorkingDataRow> {
 				Double dK = 0.0;
 				currentRow.setDK(dK);
 				Loggers.error("Not enough premises of type " + currentRow.getAnimalTypeIn() + " to get " + k + " closest " + currentRow.getAnimalType());
+				removeRow("Not enough premises of type " + currentRow.getAnimalTypeIn(), currentRow);
 			}
 			// TODO Calculate gold standard values and write test cases!
 		}
 	}
 	
-	private void checkRow( WorkingDataRow currentRow, WorkingDataRow nextRow, 
-							ArrayList<WorkingDataRow> dClosestRows, ArrayList<Double> dClosest, int k ) {
+	/**
+	 * Internal method to to test pair of rows to add to closest if appropriate.
+	 * @param currentRow
+	 * @param nextRow
+	 * @param dClosestRows
+	 * @param dClosest
+	 * @param k
+	 * @throws InvalidCoordinateException 
+	 */
+	private void checkNextRowDistance( WorkingDataRow currentRow, WorkingDataRow nextRow, 
+							ArrayList<WorkingDataRow> dClosestRows, ArrayList<Double> dClosest, int k ) throws InvalidCoordinateException {
 		if( currentRow == null ) {
 			Loggers.error("null currentRow passed to checkRow");
 			return;
@@ -332,25 +361,20 @@ public class WorkingData extends ArrayList<WorkingDataRow> {
 			Loggers.error("null nextRow passed to checkRow");
 			return;
 		}
-		try {
-			boolean bAdded = false;
-			Double distance = getDistance(currentRow, nextRow);
-			for( int i = 0; i < dClosest.size() ; i++ ) {
-				if( distance < dClosest.get(i) ) {
-					dClosestRows.add(i,currentRow);
-					dClosest.add(i,distance);
-					bAdded = true;
-					break;
-				}
+		boolean bAdded = false;
+		Double distance = getDistance(currentRow, nextRow);
+		for( int i = 0; i < dClosest.size() ; i++ ) {
+			if( distance < dClosest.get(i) ) {
+				dClosestRows.add(i,currentRow);
+				dClosest.add(i,distance);
+				bAdded = true;
+				break;
 			}
-			if( !bAdded && dClosest.size() < k ) {
-				dClosestRows.add(currentRow);
-				dClosest.add( distance );
-			}
-		} catch (InvalidCoordinateException e) {
-			Loggers.error(e);
 		}
-		
+		if( !bAdded && dClosest.size() < k ) {
+			dClosestRows.add(currentRow);
+			dClosest.add( distance );
+		}
 	}
 	
 	private Double getDistance( WorkingDataRow Row1, WorkingDataRow Row2 )
@@ -368,10 +392,17 @@ public class WorkingData extends ArrayList<WorkingDataRow> {
 	 */
 	public void deIdentify() {
 		setSortDirection();
+		cleanup();
 		annonymizeIntegrator();
+		cleanup();
+		sanityCheck();
+		cleanup();
 		calcDKs();
+		cleanup();
 		jitter();
+		cleanup();
 		addUTMCoordinates();
+		cleanup();
 	}
 
 	private void jitter() {
@@ -410,8 +441,8 @@ public class WorkingData extends ArrayList<WorkingDataRow> {
 			currentRow.setLatitude(dLat);
 			currentRow.setLongitude(dLong);
 		} catch (InvalidCoordinateException e) {
-			Loggers.error("Latitude " + dLatIn + ", Longitude " + dLongIn + ", dK " + dK + " produced nonsense output");
-			Loggers.error(e);
+			Loggers.error("Latitude " + dLatIn + ", Longitude " + dLongIn + ", dK " + dK + " produced nonsense output", e);
+			removeRow("Nonsense Jitter", currentRow);
 		}
 	}
 	
@@ -420,14 +451,17 @@ public class WorkingData extends ArrayList<WorkingDataRow> {
 		int iCo = 1;
 		for( WorkingDataRow row : this ) {
 			String sIntegrator = row.getIntegratorIn();
-			if( sIntegrator != null && sIntegrator.trim().length() > 0 && !map.containsKey(sIntegrator) ) {
+			if( sIntegrator != null && sIntegrator.trim().length() > 0 && !map.containsKey(sIntegrator) && !"NULL".equalsIgnoreCase(sIntegrator) ) {
 				map.put( sIntegrator, "Co" + Integer.toString(iCo++) );
 			}
 		}
 		for( WorkingDataRow row : this ) {
 			String sIntegrator = row.getIntegratorIn();
-			if( sIntegrator != null && sIntegrator.trim().length() > 0 ) {
+			if( sIntegrator != null && sIntegrator.trim().length() > 0 && !"NULL".equalsIgnoreCase(sIntegrator) ) {
 				row.setIntegrator( map.get(sIntegrator) );
+			}
+			else {
+				row.setIntegrator(null);
 			}
 			
 		}
@@ -435,25 +469,45 @@ public class WorkingData extends ArrayList<WorkingDataRow> {
 	
 	private void addUTMCoordinates() {
 		int iZone = UTMProjection.getBestZone(getMedianLong());
+		UTMProjection utm = null;
 		try {
-			UTMProjection utm = new UTMProjection( iZone );
-			for( WorkingDataRow row : this ) {
-				// Work with already jittered coordinates
-				Double dLat = row.getLatitude();
-				Double dLong = row.getLongitude();
-				Double aCoords[] = utm.project(dLat, dLong);
-				row.setEasting(aCoords[0]);
-				row.setNorthing(aCoords[1]);
-				row.setUTMZone(iZone);
-			}
-		
+			utm = new UTMProjection( iZone );
 		} catch (InvalidUTMZoneException e) {
-			e.printStackTrace();
-			Loggers.error(e.getMessage());
-		} catch (InvalidCoordinateException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			Loggers.error("Invalid UTM Zone", e);
+			return;
 		}
+		for( WorkingDataRow row : this ) {
+			// Work with already jittered coordinates
+			Double dLat = row.getLatitude();
+			Double dLong = row.getLongitude();
+			if( dLat != null && dLong != null ) {
+				Double aCoords[];
+				try {
+					aCoords = utm.project(dLat, dLong);
+					row.setEasting(aCoords[0]);
+					row.setNorthing(aCoords[1]);
+					row.setUTMZone(iZone);
+				} catch (InvalidCoordinateException e) {
+					Loggers.error("Cannot project coordinates", e);
+					removeRow( "Cannot project coordinates", row );
+				}
+			}
+		}
+	}
+	
+	private void removeRow( String sMsg, WorkingDataRow row ) {
+		if( !aRemovedRows.contains(row) ) {
+			JitterDot.fileError.printErrorRow( sMsg, row );
+			aRemovedRows.add(row);
+		}
+	}
+	
+	private void cleanup() {
+		for( WorkingDataRow row : aRemovedRows ) {
+			this.remove(row);
+			iRows--;
+		}
+		aRemovedRows.clear();
 	}
 
 	class CompareDistance implements Comparator<WorkingDataRow> {

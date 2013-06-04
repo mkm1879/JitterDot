@@ -13,7 +13,8 @@ import edu.clemson.lph.jitter.geometry.InvalidCoordinateException;
  */
 
 public class WorkingDataRow {
-	
+	// Raw data
+	private String[] aLine;
 	// Fields
 	private String sOriginalKey;
 	private int iKey = -1;
@@ -50,11 +51,18 @@ public class WorkingDataRow {
 	 * @param dLongitude
 	 * @param sAnimalType
 	 */
-	public WorkingDataRow( String sOriginalKey, Double dLatitude, Double dLongitude, String sAnimalTypeIn ) throws InvalidCoordinateException {
+	public WorkingDataRow( String[] aLine, String sOriginalKey, Double dLatitude, Double dLongitude, String sAnimalTypeIn ) throws InvalidCoordinateException {
+		this.aLine = aLine;
+		if( dLatitude == null )
+			throw new InvalidCoordinateException("null Latitude");		
 		if( !GPSTextField.isValidLatitude(dLatitude) )
 			throw new InvalidCoordinateException(dLatitude, "dLatitude");
+		if( dLongitude == null )
+			throw new InvalidCoordinateException("null Longitude");		
 		if( !GPSTextField.isValidLongitude(dLongitude) )
 			throw new InvalidCoordinateException(dLongitude, "dLongitude");
+		if( ( Math.abs(dLongitude) < 0.0001 && Math.abs(dLatitude) < 0.0001 ) )
+			throw new InvalidCoordinateException(dLatitude, "lat/long zero");
 		this.sOriginalKey = sOriginalKey;
 		this.dLatitudeIn = dLatitude;
 		this.dLongitudeIn = dLongitude;
@@ -86,6 +94,10 @@ public class WorkingDataRow {
 		if( getAnimalType().equals(otherRow.getAnimalType()) ) 
 			bRet = true;
 		return bRet;
+	}
+	
+	public String[] getLine() {
+		return aLine;
 	}
 
 	/**
@@ -173,7 +185,7 @@ public class WorkingDataRow {
 	 * @return String integrator
 	 */
 	public String getIntegrator() {
-		return sIntegratorIn;
+		return sIntegrator;
 	}
 
 	/**
@@ -181,7 +193,7 @@ public class WorkingDataRow {
 	 * @param sIntegrator String integrator
 	 */
 	public void setIntegrator(String sIntegrator) {
-		this.sIntegratorIn = sIntegrator;
+		this.sIntegrator = sIntegrator;
 	}
 
 	/**

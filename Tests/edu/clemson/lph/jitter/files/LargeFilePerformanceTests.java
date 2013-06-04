@@ -11,8 +11,10 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import edu.clemson.lph.jitter.JitterDot;
 import edu.clemson.lph.jitter.geometry.Distance;
 import edu.clemson.lph.jitter.geometry.InvalidCoordinateException;
+import edu.clemson.lph.jitter.logger.Loggers;
 import edu.clemson.lph.jitter.structs.WorkingData;
 import edu.clemson.lph.jitter.structs.WorkingDataRow;
 
@@ -25,76 +27,44 @@ public class LargeFilePerformanceTests {
 
 	@Before
 	public void setUp() throws Exception {
-		File fileIn = new File( "HerdsPlus.csv");
-		try {
-			source = new SourceCSVFile( fileIn );
-			aData = source.getData();	
-		} catch (FileNotFoundException e) {
-			fail(e.getMessage());
-		} catch (IOException e) {
-			fail(e.getMessage());
-		}
 	}
 
-	@Test
-	public void testSourceCSVFile() {
-		try {
-			aData.getMajorAxis();
-			aData.setSortDirection();
-			aData.setSortDirection( WorkingData.SORT_SOUTH_NORTH );
-			aData.setSortDirection( WorkingData.SORT_WEST_EAST );
-			aData.getMinLat();
-		} catch (Exception e) {
-			fail(e.getMessage());
-		}
-		
-	}
-	
 	
 	@Test
 	public void testPerformance() {
 		long startTime = System.currentTimeMillis();
 		// Invoke private subroutine
+		File fileIn = new File( "HerdsPlus.csv");
+		JitterDot.setup(new String[] {fileIn.getName()});
 		try {
-			Method method;
-			method = aData.getClass().getDeclaredMethod("calcDKs");
-			method.setAccessible(true);
-			method.invoke(aData);
+			source = new SourceCSVFile( fileIn );
+			aData = source.getData();	
+			System.out.println("getData() took " + (System.currentTimeMillis() - startTime ) + " milliseconds");
+		} catch (Exception e) {
+			e.printStackTrace();
+			fail( "Uncaught exception " + e.getMessage() );
+		}
+		startTime = System.currentTimeMillis();
+		try {
+			aData.deIdentify();
 		} catch (Exception e1) {
 			e1.printStackTrace();
-			fail(e1.getMessage());
+			fail("Uncaught Exception " + e1.getMessage());
 		} 
-		System.out.println("calcDKs took " + (System.currentTimeMillis() - startTime ) + " milliseconds");
-		// Invoke private subroutine
-		try {
-			Method method;
-			method = aData.getClass().getDeclaredMethod("jitter");
-			method.setAccessible(true);
-			method.invoke(aData);
-		} catch (Exception e1) {
-			e1.printStackTrace();
-			fail(e1.getMessage());
-		} 
-		System.out.println("calcDKs and Jitter took " + (System.currentTimeMillis() - startTime ) + " milliseconds");
+		System.out.println("deIdentify took " + (System.currentTimeMillis() - startTime ) + " milliseconds");
 		double dSumDiffDistDK = 0.0;
 		for( WorkingDataRow row : aData ) {
 			try {
 				double dDist = Distance.getDistance(row.getLatitudeIn(), row.getLongitudeIn(), row.getLatitude(), row.getLongitude());
 				dSumDiffDistDK += dDist  - row.getDK();
 			} catch (InvalidCoordinateException e) {
-				fail(e.getMessage());
+				e.printStackTrace();
+				fail(row.getOriginalKey() + ": " + row.getDK() + ": " + e.getMessage());
 			}
 		}
 		assertTrue( Math.abs( dSumDiffDistDK / (1.0 * aData.size() ) ) < TOLERANCE); // Would really like to test distribution of these
-		System.out.println( dSumDiffDistDK / (1.0 * aData.size() ) ); 
-	}
-
-	@Test
-	public void testPrint() {
+		System.out.println( "Average(distance - dK) = " + dSumDiffDistDK / (1.0 * aData.size() ) ); 
 		try {
-			long startTime = System.currentTimeMillis();
-			aData.deIdentify();
-			System.out.println("deIdentify took " + (System.currentTimeMillis() - startTime ) + " milliseconds");
 			startTime = System.currentTimeMillis();
 			OutputCSVFile fileOut = new OutputCSVFile( new File( "TestOutLarge.csv"), OutputCSVFile.OutputFileType.KEY );
 			fileOut.print(aData);
@@ -114,6 +84,10 @@ public class LargeFilePerformanceTests {
 			e.printStackTrace();
 			fail(e.getMessage());
 		}
+	}
+
+	@Test
+	public void testPrint() {
 	}
 
 

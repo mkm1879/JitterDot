@@ -18,8 +18,16 @@ import org.osgeo.proj4j.ProjCoordinate;
 public class UTMProjection {
 	private static final CoordinateTransformFactory ctFactory = new CoordinateTransformFactory();
 	private static final String WGS84_PARAM = "+title=long/lat:WGS84 +proj=longlat +datum=WGS84 +units=degrees";
+	
+	// NOTE! Originally used NAD83 but to support more than North America changed to WGS84.  Change is small enough that 
+	//       existing test cases still work.  Also allows support for southern hemisphere if necessary.
+	// Proj4js.defs["EPSG:32617"] = "+proj=utm +zone=17 +ellps=WGS84 +datum=WGS84 +units=m +no_defs";
+	// See http://spatialreference.org/ref/epsg/326[iZone]/
+	private static final String UTM_NORTH_WGS84_EPSG = "EPSG:326"; // Add zone number left padded with 0 to two digits
+//	private static final String UTM_SOUTH_WGS84_EPSG = "EPSG:327"; // Add zone number left padded with 0 to two digits
+
 	//EPSG Projection 269[iZone] - NAD83 / UTM zone [iZone]N All units in meters.  See http://spatialreference.org/ref/epsg/269[iZone]/
-	private static final String UTM_NORTH_EPSG = "EPSG:269"; // Add zone number left padded with 0 to two digits
+//	private static final String UTM_NORTH_EPSG = "EPSG:269"; // Add zone number left padded with 0 to two digits
 	private int iZone;
 	private static HashMap<Integer, Double> zoneMap;
 	
@@ -28,6 +36,9 @@ public class UTMProjection {
 	CoordinateReferenceSystem tgtCRS = null;
 	CoordinateTransform trans = null;
 	
+	/**
+	 * Initialize zoneMap with central meridians.
+	 */
 	static {
 		zoneMap = new HashMap<Integer, Double>();
 		zoneMap.put(1, -177.00);
@@ -51,8 +62,7 @@ public class UTMProjection {
 		zoneMap.put(19, -069.00);
 		zoneMap.put(20, -063.00);
 		zoneMap.put(21, -057.00);
-		zoneMap.put(22, -051.00);
-		
+		zoneMap.put(22, -051.00);		
 	}
 
 	public UTMProjection( int iZone ) throws InvalidUTMZoneException {
@@ -120,10 +130,12 @@ public class UTMProjection {
 		else {
 			String sZone = Integer.toString(iZone);
 			if( iZone < 10 ) {
-				sZone = UTM_NORTH_EPSG + "0" + sZone;
+//				sZone = UTM_NORTH_EPSG + "0" + sZone;
+				sZone = UTM_NORTH_WGS84_EPSG + "0" + sZone;
 			}
 			else {
-				sZone = UTM_NORTH_EPSG + sZone;
+//				sZone = UTM_NORTH_EPSG + sZone;
+				sZone = UTM_NORTH_WGS84_EPSG + sZone;
 			}
 			return sZone;
 		}

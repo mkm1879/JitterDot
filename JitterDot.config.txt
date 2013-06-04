@@ -17,6 +17,7 @@ Integrator=Integrator
 Status=Status
 DaysInState=DaysInState
 DaysLeftInState=DaysLeftInState
+TestField=TestValue
 
 #OriginalKey=PremiseKey
 #Latitude=Latitude

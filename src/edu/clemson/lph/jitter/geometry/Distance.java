@@ -10,14 +10,26 @@ public class Distance {
 	public static Double getDistance( Double dLat1Degrees, Double dLong1Degrees, Double dLat2Degrees, Double dLong2Degrees )
 			 throws InvalidCoordinateException {
 		Double dRet = null;
-		if( dLat1Degrees < -90.0 || dLat1Degrees > 90.0 ) {
+		if( dLat1Degrees == null ) {
+			throw new InvalidCoordinateException( "null Latitude 1" );
+		}
+		if(	dLat1Degrees < -90.0 || dLat1Degrees > 90.0 ) {
 			throw new InvalidCoordinateException( dLat1Degrees, "Latitude 1" );
 		}
-		if( dLong1Degrees < -180.0 || dLong1Degrees > 180.0 ) {
+		if( dLong1Degrees == null ) {
+			throw new InvalidCoordinateException( "null Longitude 1" );
+		}
+		if(dLong1Degrees < -180.0 || dLong1Degrees > 180.0 ) {
 			throw new InvalidCoordinateException( dLat1Degrees, "Longitude 1" );
+		}
+		if( dLat2Degrees == null ) {
+			throw new InvalidCoordinateException( "null Latitude 2" );
 		}
 		if( dLat2Degrees < -90.0 || dLat2Degrees > 90.0 ) {
 			throw new InvalidCoordinateException( dLat2Degrees, "Latitude 2" );
+		}
+		if( dLong2Degrees == null ) {
+			throw new InvalidCoordinateException( "null Longitude 2" );
 		}
 		if( dLong2Degrees < -180.0 || dLong2Degrees > 180.0 ) {
 			throw new InvalidCoordinateException( dLat2Degrees, "Longitude 2" );

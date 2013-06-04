@@ -16,11 +16,16 @@ import edu.clemson.lph.jitter.logger.Loggers;
 import edu.clemson.lph.jitter.structs.WorkingData;
 
 public class JitterDot {
+	public static OutputCSVFile fileError = null;
 
 	/**
 	 * @param args
 	 */
 	public static void main(String[] args) {
+		setup(args);
+	}
+	
+	public static void setup(String[] args) {
 		long lStartTime = System.currentTimeMillis();
 		String sInFile = null;
 		String sOutType = null;
@@ -58,10 +63,11 @@ public class JitterDot {
 		SourceCSVFile source = null;
 		try {
 			source = new SourceCSVFile( fIn );
-			WorkingData aData = source.getData();
-			aData.deIdentify();
+			fileError = new OutputCSVFile( new File(sInFile), OutputCSVFile.OutputFileType.ERROR );
 			OutputCSVFile fileOut = null;
 			fileOut = new OutputCSVFile( new File(sInFile), OutputCSVFile.OutputFileType.KEY );
+			WorkingData aData = source.getData();
+			aData.deIdentify();
 			fileOut.print(aData);
 			if( sOutType == null || "NAADSM".equalsIgnoreCase(sOutType) ) {
 				fileOut = new OutputCSVFile( new File(sInFile), OutputCSVFile.OutputFileType.NAADSM );
@@ -71,6 +77,7 @@ public class JitterDot {
 				fileOut = new OutputCSVFile( new File(sInFile), OutputCSVFile.OutputFileType.INTERSPREAD );
 				fileOut.print(aData);
 			}
+			fileError.close();
 
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();

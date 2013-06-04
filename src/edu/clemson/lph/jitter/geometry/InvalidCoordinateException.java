@@ -12,8 +12,8 @@ public class InvalidCoordinateException extends Exception {
 		this.dCoord = dCoord;
 		this.sVarName = sVarName;
 	}
-	public InvalidCoordinateException( String sVarName ) {
-		this.sVarName = sVarName;
+	public InvalidCoordinateException( String sMsg ) {
+		this.sVarName = sMsg;
 	}
 	@Override
 	public String getMessage() {

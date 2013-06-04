@@ -9,6 +9,7 @@ import java.io.IOException;
 import org.junit.Before;
 import org.junit.Test;
 
+import edu.clemson.lph.jitter.JitterDot;
 import edu.clemson.lph.jitter.geometry.InvalidCoordinateException;
 import edu.clemson.lph.jitter.structs.WorkingData;
 
@@ -18,8 +19,9 @@ public class OutputCSVFileTests {
 
 	@Before
 	public void setUp() throws Exception {
-		File fileIn = new File( "Test.csv");
 		try {
+			File fileIn = new File( "Test.csv");
+			JitterDot.setup(new String[] {fileIn.getName()});
 			source = new SourceCSVFile( fileIn );
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
@@ -41,6 +43,35 @@ public class OutputCSVFileTests {
 			fileOut.print(aData);
 			fileOut = new OutputCSVFile( new File( "TestOut.csv"), OutputCSVFile.OutputFileType.INTERSPREAD );
 			fileOut.print(aData);
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+			fail(e.getMessage());
+		} catch (NumberFormatException e) {
+			e.printStackTrace();
+			fail(e.getMessage());
+		} catch (IOException e) {
+			e.printStackTrace();
+			fail(e.getMessage());
+		} catch (InvalidCoordinateException e) {
+			e.printStackTrace();
+			fail(e.getMessage());
+		} catch (InvalidInputException e) {
+			e.printStackTrace();
+			fail(e.getMessage());
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			fail(e.getMessage());
+		}
+	}
+
+	@Test
+	public void testPrintError() {
+		try {
+			WorkingData aData = source.getData();
+			aData.deIdentify();
+			OutputCSVFile fileOut = new OutputCSVFile( new File( "TestOut.csv"), OutputCSVFile.OutputFileType.ERROR );
+			fileOut.printErrorRow("Test Error", new String[] {"Col1","Col2","col3","Col4"});
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 			fail(e.getMessage());

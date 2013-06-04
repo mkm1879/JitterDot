@@ -30,5 +30,20 @@ public class ConfigFileTests {
 	public void testGetZoneHemisphere() {
 		assertTrue( ConfigFile.getZoneHemisphere().equals("N"));
 	}
+	
+	@Test
+	public void testSetFieldMap() {
+		ConfigFile.setFieldMap("TestField", "TestValue");
+		assertTrue( ConfigFile.mapColumn("TestField").equals("TestValue"));
+		//ConfigFile.setFieldMap("TestField", "NewValue");
+		//assertTrue( ConfigFile.mapColumn("TestField").equals("NewValue"));
+		ConfigFile.saveConfig();
+	}
+	
+	@Test
+	public void testSetValue() {
+		ConfigFile.setValue("MinK", "10", "Configuration of Jittering");
+		ConfigFile.setValue("MinLat", "30", "Configuration of Coordinate");
+	}
 
 }

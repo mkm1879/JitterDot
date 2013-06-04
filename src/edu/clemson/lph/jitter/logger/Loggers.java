@@ -32,4 +32,49 @@ public class Loggers {
 		}
 	}
 	
+	public static void error( String sMsg, Object oMsg ) {
+		if( oMsg instanceof Exception ) {
+			ByteArrayOutputStream bos =  new ByteArrayOutputStream();
+			PrintStream ps = new PrintStream( bos );
+			ps.println(sMsg);
+			((Exception)oMsg).printStackTrace( ps );
+			ps.flush();
+			getLogger().error(bos.toString());
+			ps.close();
+		}
+		else {
+			getLogger().error(oMsg);
+		}
+	}
+	
+	public static void info( Object oMsg ) {
+		if( oMsg instanceof Exception ) {
+			ByteArrayOutputStream bos =  new ByteArrayOutputStream();
+			PrintStream ps = new PrintStream( bos );
+			((Exception)oMsg).printStackTrace( ps );
+			ps.flush();
+			getLogger().info(bos.toString());
+			ps.close();
+		}
+		else {
+			getLogger().info(oMsg);
+		}
+	}
+	
+	public static void Info( String sMsg, Object oMsg ) {
+		if( oMsg instanceof Exception ) {
+			ByteArrayOutputStream bos =  new ByteArrayOutputStream();
+			PrintStream ps = new PrintStream( bos );
+			ps.println(sMsg);
+			((Exception)oMsg).printStackTrace( ps );
+			ps.flush();
+			getLogger().info(bos.toString());
+			ps.close();
+		}
+		else {
+			getLogger().info(oMsg);
+		}
+	}
+
+	
 }
