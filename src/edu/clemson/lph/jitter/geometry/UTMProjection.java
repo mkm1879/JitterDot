@@ -24,11 +24,12 @@ public class UTMProjection {
 	// Proj4js.defs["EPSG:32617"] = "+proj=utm +zone=17 +ellps=WGS84 +datum=WGS84 +units=m +no_defs";
 	// See http://spatialreference.org/ref/epsg/326[iZone]/
 	private static final String UTM_NORTH_WGS84_EPSG = "EPSG:326"; // Add zone number left padded with 0 to two digits
-//	private static final String UTM_SOUTH_WGS84_EPSG = "EPSG:327"; // Add zone number left padded with 0 to two digits
+	private static final String UTM_SOUTH_WGS84_EPSG = "EPSG:327"; // Add zone number left padded with 0 to two digits
 
 	//EPSG Projection 269[iZone] - NAD83 / UTM zone [iZone]N All units in meters.  See http://spatialreference.org/ref/epsg/269[iZone]/
 //	private static final String UTM_NORTH_EPSG = "EPSG:269"; // Add zone number left padded with 0 to two digits
 	private int iZone;
+	private String sHemisphere;
 	private static HashMap<Integer, Double> zoneMap;
 	
 	CRSFactory crsFactory = null;
@@ -65,17 +66,18 @@ public class UTMProjection {
 		zoneMap.put(22, -051.00);		
 	}
 
-	public UTMProjection( int iZone ) throws InvalidUTMZoneException {
+	public UTMProjection( int iZone, String sHemisphere ) throws InvalidUTMZoneException {
 		this.iZone = iZone;
+		this.sHemisphere = sHemisphere;
 		crsFactory = new CRSFactory();
 		WGS84 = crsFactory.createFromParameters("WGS84", WGS84_PARAM);
-		String sEPSG = zoneToUTM_EPSG( iZone );
+		String sEPSG = zoneToUTM_EPSG( iZone, sHemisphere );
 		tgtCRS = createCRS( sEPSG );
 		trans = ctFactory.createTransform(WGS84, tgtCRS);
 	}
 	
-	public void setUTMZone( int iZone ) throws InvalidUTMZoneException {
-		String sEPSG = zoneToUTM_EPSG( iZone );
+	public void setUTMZone( int iZone, String sHemisphere ) throws InvalidUTMZoneException {
+		String sEPSG = zoneToUTM_EPSG( iZone, sHemisphere );
 		tgtCRS = createCRS( sEPSG );
 		trans = ctFactory.createTransform(WGS84, tgtCRS);		
 	}
@@ -83,6 +85,13 @@ public class UTMProjection {
 	public double getCentralMeridianDegrees() {
 		Double dRet = zoneMap.get(iZone);
 		return dRet;
+	}
+	
+	public static String getHemisphere( double dMedianLatitude ) {
+		if( dMedianLatitude > 0.0 ) 
+			return "N";
+		else
+			return "S";
 	}
 	
 	public static int getBestZone( double dMedianLongitude ) {
@@ -123,19 +132,27 @@ public class UTMProjection {
 		return aCoords;
 	}
 	
-	private String zoneToUTM_EPSG( int iZone ) throws InvalidUTMZoneException {
+	private String zoneToUTM_EPSG( int iZone, String sHemisphere ) throws InvalidUTMZoneException {
 		if( iZone < 1 || iZone > 22 ) {
 			throw new InvalidUTMZoneException( iZone, "iZone" );
 		}
 		else {
 			String sZone = Integer.toString(iZone);
 			if( iZone < 10 ) {
-//				sZone = UTM_NORTH_EPSG + "0" + sZone;
-				sZone = UTM_NORTH_WGS84_EPSG + "0" + sZone;
+				if( sHemisphere.equals("N") )
+					sZone = UTM_NORTH_WGS84_EPSG + "0" + sZone;
+				else if( sHemisphere.equals("S") )
+					sZone = UTM_SOUTH_WGS84_EPSG + "0" + sZone;
+				else 
+					throw new InvalidUTMZoneException(iZone, "Unknown hemisphere " + sHemisphere);
 			}
 			else {
-//				sZone = UTM_NORTH_EPSG + sZone;
-				sZone = UTM_NORTH_WGS84_EPSG + sZone;
+				if( sHemisphere.equals("N") )
+					sZone = UTM_NORTH_WGS84_EPSG + sZone;
+				else if( sHemisphere.equals("S") )
+					sZone = UTM_SOUTH_WGS84_EPSG + sZone;
+				else 
+					throw new InvalidUTMZoneException(iZone, "Unknown hemisphere " + sHemisphere);
 			}
 			return sZone;
 		}

@@ -27,7 +27,7 @@ public class WorkingData extends ArrayList<WorkingDataRow> {
 	private int k;
 	private static final int altK = 3;
 	
-	private int iSortDirection = SORT_WEST_EAST;
+	private int iSortDirection = SORT_WEST_EAST;  // More states are wider than taller.
 	private int iCurrentSort = SORT_NONE;
 	private int iNextKey = 0;
 	private ArrayList<Integer> randInts;
@@ -35,6 +35,7 @@ public class WorkingData extends ArrayList<WorkingDataRow> {
 	private int iRows = 10000;
 	private Double dMinLong = null;
 	private Double dMaxLong = null;
+	private Double dMedianLat = null;
 	private Double dMedianLong = null;
 	private Double dMinLat = null;
 	private Double dMaxLat = null;
@@ -85,6 +86,7 @@ public class WorkingData extends ArrayList<WorkingDataRow> {
 
 	/**
 	 * Default and fall back is East West since most states are longer that direction.
+	 * Should use enum!
 	 * @param iSort
 	 */
 	public void setSortDirection( int iSort ) throws Exception {
@@ -122,26 +124,75 @@ public class WorkingData extends ArrayList<WorkingDataRow> {
 	}
 	
 	private void calcStats() {
-		Double dNextMinLat = 90.0;
-		Double dNextMaxLat = -90.0;
-
-		Double dNextMinLong = 180.0;
-		Double dNextMaxLong = -180.0;
-		
-		for( WorkingDataRow row : this ) {
-			if( row.getLatitudeIn() < dNextMinLat )
-				dNextMinLat = row.getLatitudeIn();
-			if( row.getLatitudeIn() > dNextMaxLat )
-				dNextMaxLat = row.getLatitudeIn();
-			if( row.getLongitudeIn() < dNextMinLong )
-				dNextMinLong = row.getLongitudeIn();
-			if( row.getLongitudeIn() > dNextMaxLong )
-				dNextMaxLong = row.getLongitudeIn();
+		// If already sorted do sorted direction first
+		if( iCurrentSort == SORT_WEST_EAST) {
+			doLongStats();
+			doLatStats();
 		}
-		dMinLat = dNextMinLat;
-		dMaxLat = dNextMaxLat;
-		dMinLong = dNextMinLong;
-		dMaxLong = dNextMaxLong;
+		else if( iCurrentSort == SORT_SOUTH_NORTH) {
+			doLatStats();
+			doLongStats();
+		}
+		// If not already sorted do in order to leave sorted 
+		// in correct direction.
+		else if( getSortDirection() == SORT_SOUTH_NORTH ) {
+			doLongStats();
+			doLatStats();			
+		}
+		else {
+			doLatStats();
+			doLongStats();			
+		}
+		// this should be belt and suspenders.
+		if( iCurrentSort != getSortDirection() ) {
+			System.err.println( "Third sort performed in calcStats" );
+			sortMajorAxis();
+		}		
+
+	}
+	
+	private void doLatStats() {
+		// Calculate Latitude
+		WorkingDataRow row;
+		if( iCurrentSort != SORT_SOUTH_NORTH) {
+			Collections.sort(this, new CompareLatitude() );
+			iCurrentSort = SORT_SOUTH_NORTH;
+			row = get(0);
+			dMinLat = row.getLatitudeIn();
+			row = get( size() - 1 );
+			dMaxLat = row.getLatitudeIn();
+		}
+		if( size() % 2 != 0 ) {
+			WorkingDataRow midRow = get( size() / 2);
+			dMedianLat = midRow.getLatitudeIn();
+		}
+		else {
+			WorkingDataRow lowRow = get( (size() -1) / 2 );
+			WorkingDataRow highRow = get( ((size() -1) / 2) + 1 );
+			dMedianLat = ( lowRow.getLatitudeIn() + highRow.getLatitudeIn() ) / 2.0;
+		}	
+	}
+	
+	private void doLongStats() {
+		// Calculate Longitude
+		WorkingDataRow row;
+		if( iCurrentSort != SORT_WEST_EAST) {
+			Collections.sort(this, new CompareLongitude() );
+			iCurrentSort = SORT_WEST_EAST;		
+			row = get(0);
+			dMinLong = row.getLongitudeIn();
+			row = get( size() - 1 );
+			dMaxLong = row.getLongitudeIn();
+		}
+		if( size() % 2 != 0 ) {
+			WorkingDataRow midRow = get( size() / 2);
+			dMedianLong = midRow.getLongitudeIn();
+		}
+		else {
+			WorkingDataRow lowRow = get( (size() -1) / 2 );
+			WorkingDataRow highRow = get( ((size() -1) / 2) + 1 );
+			dMedianLong = ( lowRow.getLongitudeIn() + highRow.getLongitudeIn() ) / 2.0;
+		}
 	}
 	
 	/**
@@ -159,26 +210,19 @@ public class WorkingData extends ArrayList<WorkingDataRow> {
 			return SORT_WEST_EAST;
 	}
 	
-	public Double getMedianLong() {
+	public Double getMedianLongitude() {
 		if( dMedianLong == null ) {
-			if( iCurrentSort != SORT_WEST_EAST) {
-				Collections.sort(this, new CompareLongitude() );
-				iCurrentSort = SORT_WEST_EAST;			
-			}
-			if( size() % 2 != 0 ) {
-				WorkingDataRow midRow = get( size() / 2);
-				dMedianLong = midRow.getLongitudeIn();
-			}
-			else {
-				WorkingDataRow lowRow = get( (size() -1) / 2 );
-				WorkingDataRow highRow = get( ((size() -1) / 2) + 1 );
-				dMedianLong = ( lowRow.getLongitudeIn() + highRow.getLongitudeIn() ) / 2.0;
-			}
-			if( iCurrentSort != getSortDirection() ) {
-				sortMajorAxis();
-			}
+			calcStats();
 		}
 		return dMedianLong;
+	}
+
+	
+	public Double getMedianLatitude() {
+		if( dMedianLat == null ) {
+			calcStats();
+		}
+		return dMedianLat;
 	}
 
 	/**
@@ -238,7 +282,7 @@ public class WorkingData extends ArrayList<WorkingDataRow> {
 	
 	private void sanityCheck() {
 		for( WorkingDataRow row : this ) {
-			if( Math.abs( row.getLongitudeIn() - getMedianLong() ) > MAX_LONGITUDE_DISTANCE ) {
+			if( Math.abs( row.getLongitudeIn() - getMedianLongitude() ) > MAX_LONGITUDE_DISTANCE ) {
 				Loggers.error( "Wild Longitude (" + row.getLongitudeIn() + " in row " + row.getOriginalKey() );
 				removeRow("Wild Longitude", row);			
 			}
@@ -468,10 +512,11 @@ public class WorkingData extends ArrayList<WorkingDataRow> {
 	}
 	
 	private void addUTMCoordinates() {
-		int iZone = UTMProjection.getBestZone(getMedianLong());
+		int iZone = UTMProjection.getBestZone(getMedianLongitude());
+		String sHemisphere = UTMProjection.getHemisphere(getMedianLatitude());
 		UTMProjection utm = null;
 		try {
-			utm = new UTMProjection( iZone );
+			utm = new UTMProjection( iZone, sHemisphere );
 		} catch (InvalidUTMZoneException e) {
 			Loggers.error("Invalid UTM Zone", e);
 			return;

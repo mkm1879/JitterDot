@@ -56,14 +56,14 @@ public class WorkingDataTests {
 
 	@Test
 	public void testGetMedianLongEven() {
-		assertTrue( Math.abs(aData.getMedianLong() - (-81.088185) ) < TOLERANCE );
+		assertTrue( Math.abs(aData.getMedianLongitude() - (-81.088185) ) < TOLERANCE );
 	}
 	
 	@Test
 	public void testGetBestZone() {
 		// For zone 16, our test default.
 		// test again with real data in WorkingDataTests
-		assertTrue( UTMProjection.getBestZone( aData.getMedianLong() ) == 17 );
+		assertTrue( UTMProjection.getBestZone( aData.getMedianLongitude() ) == 17 );
 	}
 	
 	@Test 
@@ -106,7 +106,7 @@ public class WorkingDataTests {
 			source = new SourceCSVFile( fileIn );
 			WorkingData aData2 = source.getData();	
 			aData2.setSortDirection(WorkingData.SORT_SOUTH_NORTH);
-			assertTrue( Math.abs(aData2.getMedianLong() - (-81.6194) ) < TOLERANCE );
+			assertTrue( Math.abs(aData2.getMedianLongitude() - (-81.6194) ) < TOLERANCE );
 		} catch (FileNotFoundException e) {
 			fail(e.getMessage());
 		} catch (IOException e) {

@@ -13,12 +13,17 @@ public class UTMProjectionTests {
 	
 	@Before
 	public void setUp() throws Exception {
-		projection = new UTMProjection( 16 );
+		projection = new UTMProjection( 16, "N" );
 	}
 
 	@Test(expected=InvalidUTMZoneException.class)
-	public void testUTMProjection() throws InvalidUTMZoneException {
-		new UTMProjection( 28 );
+	public void testUTMProjectionBadZone() throws InvalidUTMZoneException {
+		new UTMProjection( 28, "N" );
+	}
+
+	@Test(expected=InvalidUTMZoneException.class)
+	public void testUTMProjectionBadHemisphere() throws InvalidUTMZoneException {
+		new UTMProjection( 17, "W" );
 	}
 	
 	@Test
@@ -41,14 +46,14 @@ public class UTMProjectionTests {
 		testProjectRow(34.579, -86.6056, 3826428.04, 536173.11);
 		// Remaining tests test specific coordinates from various zones across the US.
 		try {
-			projection.setUTMZone(20);
+			projection.setUTMZone(20, "N");
 		} catch (InvalidUTMZoneException e) {
 			fail(e.getMessage());
 		}
 		testProjectRow(41.2318601, -77.03975372, 4660664.89377, -678090.725901);
 		testProjectRow(45.27658, -69.605286, 5034940.73076, -18075.367296);
 		try {
-			projection.setUTMZone(17);
+			projection.setUTMZone(17, "N");
 		} catch (InvalidUTMZoneException e) {
 			fail(e.getMessage());
 		}
@@ -56,7 +61,7 @@ public class UTMProjectionTests {
 		testProjectRow(38.68177308, -85.78775375, 4292354.74463, 83462.52924);
 		testProjectRow(33.48331911, -82.20029071, 3705514.29522, 388485.950812);
 		try {
-			projection.setUTMZone(14);
+			projection.setUTMZone(14, "N");
 		} catch (InvalidUTMZoneException e) {
 			fail(e.getMessage());
 		}
@@ -65,7 +70,7 @@ public class UTMProjectionTests {
 		testProjectRow(31.0895711, -97.39004972, 3440642.973, 653561.2669);
 		testProjectRow(32.33757409, -89.49892171, 3617811.851, 1395884.757);
 		try {
-			projection.setUTMZone(12);
+			projection.setUTMZone(12, "N");
 		} catch (InvalidUTMZoneException e) {
 			fail(e.getMessage());
 		}
@@ -75,7 +80,7 @@ public class UTMProjectionTests {
 		testProjectRow(47.8251026, -107.2680564, 5303607.198, 779306.5346045);
 		testProjectRow(36.48947911, -100.5498393, 4089411.74887, 1437510.22072);
 		try {
-			projection.setUTMZone(10);
+			projection.setUTMZone(10, "N");
 		} catch (InvalidUTMZoneException e) {
 			fail(e.getMessage());
 		}
@@ -83,18 +88,35 @@ public class UTMProjectionTests {
 		testProjectRow(38.04480634, -115.8841053, 4234765.43982, 1124763.51893);
 		testProjectRow(47.98348223, -112.952873, 5363513.21396, 1249296.61747);
 		try {
-			projection.setUTMZone(4);
+			projection.setUTMZone(4, "N");
 		} catch (InvalidUTMZoneException e) {
 			fail(e.getMessage());
 		}
 		testProjectRow(62.02674, -142.762511, 6983714.91955, 1343262.29862);
 	}
 	
+	@Test
+	public void testSouth() {
+		try {
+			projection.setUTMZone(12, "S");
+		} catch (InvalidUTMZoneException e) {
+			fail(e.getMessage());
+		}
+		// Just some arbitrary points in the southern pacific!
+		testProjectRow(-44.89701413, -99.67484647, 4965701.0241755, 1394188.90818);
+		testProjectRow(-34.95464622, -109.0466408, 6130244.188860544, 678357.523273);
+		testProjectRow(-43.13828955, -108.1789843, 5219964.680774526, 729426.167439);
+		testProjectRow(-47.8251026, -107.2680564, 4696392.801778319, 779306.5346045);
+		testProjectRow(-36.48947911, -100.5498393, 5910588.250326522, 1437510.22072);
+	}
 	
 	private void testProjectRow( Double dLat, Double dLong, Double dNorth, Double dEast ) {
 		Double[] aCoords;
 		try {
 			aCoords = projection.project(dLat, dLong);
+			if( dLat < 0.0 ) {
+				System.out.println(dLong +", " + dLat + ", " + aCoords[0] + ", " + aCoords[1]);
+			}
 			assertTrue( Math.abs(aCoords[0] - dEast) < TOLERANCE  );
 			assertTrue( Math.abs(aCoords[1] - dNorth) < TOLERANCE  );	
 		} catch (InvalidCoordinateException e) {
