@@ -4,12 +4,14 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.Set;
 
 import edu.clemson.lph.jitter.JitterDot;
 import edu.clemson.lph.jitter.files.ConfigFile;
 import edu.clemson.lph.jitter.geometry.Distance;
 import edu.clemson.lph.jitter.geometry.InvalidCoordinateException;
 import edu.clemson.lph.jitter.geometry.InvalidUTMZoneException;
+import edu.clemson.lph.jitter.geometry.StateBounds;
 import edu.clemson.lph.jitter.geometry.UTMProjection;
 import edu.clemson.lph.jitter.logger.Loggers;
 import edu.clemson.lph.security.RandomNumbers;
@@ -281,10 +283,35 @@ public class WorkingData extends ArrayList<WorkingDataRow> {
 	}
 	
 	private void sanityCheck() {
+		boolean bHasStates = false;
+		ArrayList<String> selectedStates = ConfigFile.getStates();
+		if( selectedStates != null )
+			bHasStates = true;
+		Set<String> states = StateBounds.getStates();
+		StateBounds bounds = null;
+		for( String sState : selectedStates ) {
+			if( !states.contains(sState) ) {
+				Loggers.error( "State " + sState + " not found");
+				bHasStates = false;
+				break;
+			}
+		}
+		if( bHasStates ) {
+			bounds = new StateBounds( selectedStates );
+		}
 		for( WorkingDataRow row : this ) {
-			if( Math.abs( row.getLongitudeIn() - getMedianLongitude() ) > MAX_LONGITUDE_DISTANCE ) {
-				Loggers.error( "Wild Longitude (" + row.getLongitudeIn() + " in row " + row.getOriginalKey() );
-				removeRow("Wild Longitude", row);			
+			if( bounds != null ) {
+				if( row.getLongitudeIn() < bounds.getMinLong() || row.getLongitudeIn() > bounds.getMaxLong() ||
+						 row.getLatitudeIn() < bounds.getMinLat() || row.getLatitudeIn() > bounds.getMaxLat()) {
+					Loggers.error( "Coordinate outside state bounds (" + row.getLongitudeIn() + ", " + row.getLatitudeIn() + " in row " + row.getOriginalKey() );
+					removeRow("Coordinate Outside State Bounds", row);			
+				}
+			}
+			else {
+				if( Math.abs( row.getLongitudeIn() - getMedianLongitude() ) > MAX_LONGITUDE_DISTANCE ) {
+					Loggers.error( "Wild Longitude (" + row.getLongitudeIn() + " in row " + row.getOriginalKey() );
+					removeRow("Wild Longitude", row);			
+				}
 			}
 		}
 	}
@@ -532,6 +559,7 @@ public class WorkingData extends ArrayList<WorkingDataRow> {
 					row.setEasting(aCoords[0]);
 					row.setNorthing(aCoords[1]);
 					row.setUTMZone(iZone);
+					row.setUTMHemisphere(sHemisphere);
 				} catch (InvalidCoordinateException e) {
 					Loggers.error("Cannot project coordinates", e);
 					removeRow( "Cannot project coordinates", row );

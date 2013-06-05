@@ -11,6 +11,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Properties;
+import java.util.StringTokenizer;
 
 import edu.clemson.lph.jitter.logger.Loggers;
 import edu.clemson.lph.jitter.structs.ColumnNameMap;
@@ -50,6 +51,18 @@ public class ConfigFile {
 		if( sColumnIn == null ) 
 			sColumnIn = sColumnOut;
 		return sColumnIn;
+	}
+	
+	private static ArrayList<String> getStringList(String sKey) {
+		ArrayList<String> aRet = new ArrayList<String>();
+		initRead();
+		String sValue = props.getProperty(sKey);
+		StringTokenizer tok = new StringTokenizer(sValue,",");
+		while( tok.hasMoreTokens() ) {
+			String sNext = tok.nextToken();
+			aRet.add(sNext.trim());
+		}
+		return aRet;
 	}
 	
 	private static Integer getInt(String sKey) {
@@ -100,6 +113,10 @@ public class ConfigFile {
 			sRet = sValue;
 		}
 		return sRet;
+	}
+	
+	public static ArrayList<String> getStates() {
+		return getStringList("States");
 	}
 	
 	/**

@@ -89,7 +89,7 @@ public class OutputCSVFile {
 		if( type.equals(OutputFileType.INTERSPREAD) || type.equals(OutputFileType.KEY) ) {
 			print(row.getEasting());
 			print(row.getNorthing());
-			print(row.getUTMZone());
+			print(row.getUTMZone() + row.getUTMHemisphere() );
 		}
 		print(row.getStatus());
 		print(row.getDaysInState());

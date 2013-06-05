@@ -42,6 +42,7 @@ public class WorkingDataRow {
 	private Double dEasting = null;
 	private Double dNorthing = null;
 	private Integer iUTMZone = null;
+	private String sHemisphere = null;;
 	
 	
 	/**
@@ -50,6 +51,7 @@ public class WorkingDataRow {
 	 * @param dLatitude
 	 * @param dLongitude
 	 * @param sAnimalType
+	 * @exception InvalidCoordinateException caught in SourceCSVFile.getData and used to add row to the Errors file.
 	 */
 	public WorkingDataRow( String[] aLine, String sOriginalKey, Double dLatitude, Double dLongitude, String sAnimalTypeIn ) throws InvalidCoordinateException {
 		this.aLine = aLine;
@@ -385,5 +387,12 @@ public class WorkingDataRow {
 		this.iUTMZone = iUTMZone;
 	}
 	
+	public String getUTMHemisphere() {
+		return sHemisphere ;
+	}
+	
+	public void setUTMHemisphere( String sHemisphere ) {
+		this.sHemisphere = sHemisphere;
+	}
 
 }
