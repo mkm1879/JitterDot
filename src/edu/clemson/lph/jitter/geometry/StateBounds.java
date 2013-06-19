@@ -1,6 +1,7 @@
 package edu.clemson.lph.jitter.geometry;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Set;
 
@@ -19,6 +20,17 @@ public class StateBounds {
 	
 	public StateBounds( ArrayList<String> aStates ) {
 		setStates( aStates );
+	}
+	
+	public static String[] getStateList() {
+		ArrayList<String> lStates = new ArrayList<String>();
+		lStates.add(" ");
+		for( String state : map.keySet() )
+			lStates.add(state);
+		Collections.sort(lStates);
+		String[] aStates = new String[lStates.size()];
+		aStates = lStates.toArray(aStates);
+		return aStates;
 	}
 	
 	public static Set<String> getStates() {

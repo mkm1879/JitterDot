@@ -18,6 +18,7 @@ import edu.clemson.lph.jitter.structs.WorkingData;
 import edu.clemson.lph.jitter.structs.WorkingDataRow;
 
 public class SourceCSVFile {
+	private static final String[] STANDARD_COLUMNS = {	"OriginalKey","Animals","Houses","AnimalType","Integrator","Longitude","Latitude","Status","DaysInState","DaysLeftInState"};
 	private File fInput = null;
 	private LabeledCSVParser parser = null;
 	private String aColumns[];
@@ -29,6 +30,10 @@ public class SourceCSVFile {
 		parser = new LabeledCSVParser( new ExcelCSVParser( new FileInputStream( fInput )));
 		aColumns = parser.getLabels();
 		WorkingData.setColumns(aColumns);
+	}
+	
+	public static String[] getStandardColumns() {
+		return STANDARD_COLUMNS;
 	}
 	
 	public String[] getColumns() {

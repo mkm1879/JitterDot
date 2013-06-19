@@ -1,12 +1,11 @@
 #JitterDot.config Used to set up options for JitterDot location anonymizer.
 #Configuration of Jittering 
-MinK=10
+MinK=5
 MinGroup=5
 States=South Carolina, North Carolina
 
 #Configuration of Coordinate Projection for InterspreadPlus model file
 UTMZone=17N
-MinLat=30
 
 #Field Mappings
 OriginalKey=HerdID
