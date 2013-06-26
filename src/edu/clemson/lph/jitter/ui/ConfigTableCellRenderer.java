@@ -2,15 +2,12 @@ package edu.clemson.lph.jitter.ui;
 
 import java.awt.Color;
 import java.awt.Component;
-import java.awt.Dimension;
 import java.util.ArrayList;
 
-import javax.swing.DefaultCellEditor;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JTable;
 import javax.swing.border.BevelBorder;
-import javax.swing.border.Border;
 import javax.swing.table.TableCellRenderer;
 
 import edu.clemson.lph.jitter.files.SourceCSVFile;

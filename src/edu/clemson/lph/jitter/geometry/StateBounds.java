@@ -3,12 +3,13 @@ package edu.clemson.lph.jitter.geometry;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Set;
 
 public class StateBounds {
 	private static HashMap<String, Coords> map;
 	private String sState = null;
-	private ArrayList<String> aStates = null;
+	private List<String> aStates = null;
 	private Coords stateCoords = null;
 	
 	public StateBounds() {
@@ -18,12 +19,12 @@ public class StateBounds {
 		setState( sState );
 	}
 	
-	public StateBounds( ArrayList<String> aStates ) {
+	public StateBounds( List<String> aStates ) {
 		setStates( aStates );
 	}
 	
 	public static String[] getStateList() {
-		ArrayList<String> lStates = new ArrayList<String>();
+		List<String> lStates = new ArrayList<String>();
 		lStates.add(" ");
 		for( String state : map.keySet() )
 			lStates.add(state);
@@ -81,7 +82,7 @@ public class StateBounds {
 		addState("Pennsylvania",-79.48,-73.32,42.27,39.72);
 		addState("Puerto Rico",-66.05,-64.78,18.53,17.92);
 		addState("Rhode Island",-70.08,-70.88,42.02,41.13);
-		addState("South Carolina",-82.63,-77.48,35.22,32.00);
+		addState("South Carolina",-83.63,-77.48,35.22,32.00);
 		addState("South Dakota",-103.95,-95.57,45.93,42.48);
 		addState("Tennessee",-89.68,-80.37,36.68,34.97);
 		addState("Texas",-104.35,-92.50,36.50,25.83);
@@ -100,7 +101,7 @@ public class StateBounds {
 		this.stateCoords = map.get(sState);
 	}
 	
-	public void setStates( ArrayList<String> aStates ) {
+	public void setStates( List<String> aStates ) {
 		this.aStates = aStates;
 		Coords overallCoords = null;
 		for( String sState : aStates ) {
@@ -122,27 +123,30 @@ public class StateBounds {
 		this.stateCoords = overallCoords;
 	}
 	
+	// Include some wiggle room
 	public Double getMinLat() {
 		if( stateCoords == null )
 			return null;
-		return stateCoords.minLat;
+		return stateCoords.minLat - 0.5;
 	}
 	
 	public Double getMaxLat() {
 		if( stateCoords == null )
 			return null;
-		return stateCoords.maxLat;
+		return stateCoords.maxLat + 0.5;
 	}
 	public Double getMinLong() {
 		if( stateCoords == null )
 			return null;
-		return stateCoords.minLong;
+		// Fudge Factor due to apparent error in above data.
+		return stateCoords.minLong - 2.0;
 	}
 	
 	public Double getMaxLong() {
 		if( stateCoords == null )
 			return null;
-		return stateCoords.maxLong;
+		// Don't know why the shift in these numbers.  Fix this if I recalculate bounding boxes.
+		return stateCoords.maxLong - 0.5;
 	}
 
 	private static void addState( String sState, Double dMinLong, Double dMaxLong, Double dMaxLat, Double dMinLat ) {

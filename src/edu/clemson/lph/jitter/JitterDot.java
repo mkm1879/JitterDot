@@ -1,5 +1,6 @@
 package edu.clemson.lph.jitter;
 
+import java.awt.EventQueue;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -8,96 +9,104 @@ import javax.swing.JFileChooser;
 import javax.swing.UIManager;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
+import edu.clemson.lph.dialogs.MessageDialog;
+import edu.clemson.lph.jitter.files.ConfigFile;
 import edu.clemson.lph.jitter.files.InvalidInputException;
 import edu.clemson.lph.jitter.files.OutputCSVFile;
 import edu.clemson.lph.jitter.files.SourceCSVFile;
 import edu.clemson.lph.jitter.geometry.InvalidCoordinateException;
 import edu.clemson.lph.jitter.logger.Loggers;
 import edu.clemson.lph.jitter.structs.WorkingData;
+import edu.clemson.lph.jitter.ui.ConfigController;
+import edu.clemson.lph.jitter.ui.ConfigFrame;
 
 public class JitterDot {
-	public static OutputCSVFile fileError = null;
+	// Global reference to single error file for content related errors, leaving Loggers for application errors and info.
+	// The Error File is meant to be user-friendly in the sense that it is formatted similarly to the original data.
+	private static OutputCSVFile fileError = null;
+	// Make args available in runnable without having to subclass Thread.
+	private static String[] args;
 
 	/**
 	 * @param args
 	 */
-	public static void main(String[] args) {
-		setup(args);
+	public static void main(String[] argv) {
+		args = argv;
+		EventQueue.invokeLater(new Runnable() {
+			public void run() {
+			    try {
+			        UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+			    } catch (Exception e) {
+			        Loggers.error( "Error setting look and feel\n" + e.getMessage() );
+			    }
+				try {
+					setup(args);
+				} catch (Exception e) {
+					Loggers.error(e);
+				}
+			}
+		});
 	}
 	
 	public static void setup(String[] args) {
-		long lStartTime = System.currentTimeMillis();
 		String sInFile = null;
-		String sOutType = null;
-		File fIn = null;
+		boolean bRunNow = false;
 
 		if( args.length > 0 ) {
-			sInFile = args[0];
-			fIn = new File(sInFile);
+			for( String sArg : args ) {
+				if( sArg.toLowerCase().endsWith(".csv")) {
+					sInFile = sArg;
+				}
+				else if( sArg.toLowerCase().endsWith(".config")) {
+					ConfigFile.setConfigFilePath(sArg);
+				}
+				else if( sArg.toLowerCase().equals("naadsm")) {
+					ConfigFile.setInterspreadRequested(false);
+					ConfigFile.setNAADSMRequested(true);
+				}
+				else if( sArg.toLowerCase().startsWith("interspread")) {
+					ConfigFile.setNAADSMRequested(false);
+					ConfigFile.setInterspreadRequested(true);
+				}
+				else if( sArg.toLowerCase().equals("-r")) {
+					bRunNow = true;
+				}
+				else {
+					Loggers.error("Unexpected argument '" + sArg + "' on command line");
+					System.exit(1);
+				}
+			}
+		}
+		if( bRunNow && sInFile != null ) {
+			runJitter( sInFile );
 		}
 		else {
-		    try {
-		        UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-		    } catch (Exception e) {
-		        Loggers.error( "Error setting look and feel\n" + e.getMessage() );
-		    }
-			File fDir = new File(".");
-			JFileChooser open = new JFileChooser(fDir);
-			open.setDialogTitle("Select Population File to Deidentify");
-			open.setFileSelectionMode(JFileChooser.FILES_ONLY);
-			open.setFileFilter(new FileNameExtensionFilter("CSV Files", "csv"));
-			int resultOfFileSelect = JFileChooser.ERROR_OPTION;
-			resultOfFileSelect = open.showOpenDialog(null);
-			if(resultOfFileSelect==JFileChooser.APPROVE_OPTION) {
-				fIn = open.getSelectedFile();
-				sInFile = fIn.getName();
-			}
-			else {
-				Loggers.error("No file selected");
+			ConfigFrame frame = null;
+			try {
+				frame = new ConfigFrame();
+				if( sInFile != null )
+					frame.setDataFile( sInFile );
+				frame.setVisible(true);
+			} catch (IOException e) {
+				MessageDialog.messageWait(frame, "JitterDot Error", e.getMessage() );
 				System.exit(1);
-			}
-		}
-		if( args.length > 1 ) {
-			sOutType = args[1];
-		}
-		SourceCSVFile source = null;
-		try {
-			source = new SourceCSVFile( fIn );
-			fileError = new OutputCSVFile( new File(sInFile), OutputCSVFile.OutputFileType.ERROR );
-			OutputCSVFile fileOut = null;
-			fileOut = new OutputCSVFile( new File(sInFile), OutputCSVFile.OutputFileType.KEY );
-			WorkingData aData = source.getData();
-			aData.deIdentify();
-			fileOut.print(aData);
-			if( sOutType == null || "NAADSM".equalsIgnoreCase(sOutType) ) {
-				fileOut = new OutputCSVFile( new File(sInFile), OutputCSVFile.OutputFileType.NAADSM );
-				fileOut.print(aData);
-			}
-			if( sOutType == null || "INTERSPREAD".equalsIgnoreCase(sOutType) ) {
-				fileOut = new OutputCSVFile( new File(sInFile), OutputCSVFile.OutputFileType.INTERSPREAD );
-				fileOut.print(aData);
-			}
-			fileError.close();
-
-		} catch (FileNotFoundException e) {
-			e.printStackTrace();
-			Loggers.error(e);
-		} catch (IOException e) {
-			e.printStackTrace();
-			Loggers.error(e);
-		} catch (NumberFormatException e) {
-			e.printStackTrace();
-			Loggers.error(e);
-		} catch (InvalidCoordinateException e) {
-			e.printStackTrace();
-			Loggers.error(e);
-		} catch (InvalidInputException e) {
-			e.printStackTrace();
-			Loggers.error(e);
-		}
-		long lEndTime = System.currentTimeMillis();
-		Loggers.getLogger().info( "Run took " + Double.toString((lEndTime - lStartTime)/1000.0) + " seconds" );
-		
+			} catch (Exception e) {
+				Loggers.error(e);
+			}		
+		}	
+	}
+	
+	public static void setErrorFile( OutputCSVFile csvFile ) {
+		fileError = csvFile;
+	}
+	
+	public static OutputCSVFile getErrorFile() {
+		return fileError;
+	}
+	
+	public static void runJitter( String sDataFile ) {
+		JitterThread thread = new JitterThread( null, sDataFile );
+		thread.runJitter();
 	}
 
 }

@@ -3,6 +3,7 @@ package edu.clemson.lph.jitter.files;
 import static org.junit.Assert.*;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -52,7 +53,7 @@ public class ConfigFileTests {
 	
 	@Test
 	public void testGetStates() {
-		ArrayList<String> aStates = ConfigFile.getStates();
+		List<String> aStates = ConfigFile.getStates();
 		for( String sState : aStates )
 			System.out.println(sState);
 	}
@@ -61,6 +62,14 @@ public class ConfigFileTests {
 	public void testConfigStateBounds() {
 		StateBounds bounds = new StateBounds(ConfigFile.getStates());
 		System.out.println( "Config States: " +  bounds.getMinLat() + ", " + bounds.getMaxLat() + ", " + bounds.getMinLong() + ", " + bounds.getMaxLong());
+	}
+	
+	@Test
+	public void testListKeys() {
+		List<String> aKeys = ConfigFile.listMapKeys();
+		for( String sKey : aKeys)
+			System.out.println(sKey);
+		assertTrue(aKeys.size() > 0 );
 	}
 
 }

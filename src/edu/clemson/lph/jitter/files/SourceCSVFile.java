@@ -19,6 +19,7 @@ import edu.clemson.lph.jitter.structs.WorkingDataRow;
 
 public class SourceCSVFile {
 	private static final String[] STANDARD_COLUMNS = {	"OriginalKey","Animals","Houses","AnimalType","Integrator","Longitude","Latitude","Status","DaysInState","DaysLeftInState"};
+	private static final String[] ESSENTIAL_COLUMNS = {	"OriginalKey","Animals","AnimalType","Longitude","Latitude"};
 	private File fInput = null;
 	private LabeledCSVParser parser = null;
 	private String aColumns[];
@@ -36,6 +37,11 @@ public class SourceCSVFile {
 		return STANDARD_COLUMNS;
 	}
 	
+	
+	public static String[] getEssentialColumns() {
+		return ESSENTIAL_COLUMNS;
+	}
+	
 	public String[] getColumns() {
 		return aColumns;
 	}
@@ -46,7 +52,7 @@ public class SourceCSVFile {
 	 * This is the longest running method in the program.  Not sure if it can be optimized.
 	 * @return ArrayList of Original Data with generated new key value.
 	 * @throws IOException Mainly when problems with the source file arise
-	 * @throws NumberFormatException When converting fields in CSV to numberic (double or int)
+	 * @throws NumberFormatException When converting fields in CSV to numeric (double or int)
 	 * @throws InvalidCoordinateException When converting coordinates from strings in CSV file.
 	 * @throws InvalidInputException For any row that lacks valid data for any required field.
 	 */
@@ -132,7 +138,7 @@ public class SourceCSVFile {
 			if( dataRow == null || sOriginalKey == null || dLongitudeIn == null || dLatitudeIn == null || sAnimalType == null
 					|| ( Math.abs(dLongitudeIn) < 0.0001 && Math.abs(dLatitudeIn) < 0.0001 ) ) {
 				Loggers.getLogger().info("Row " + sOriginalKey + " could not be used ");
-				JitterDot.fileError.printErrorRow("Row missing required data", aLine);
+				JitterDot.getErrorFile().printErrorRow("Row missing required data", aLine);
 				aData.setRows(--iRows);
 				continue;
 			}

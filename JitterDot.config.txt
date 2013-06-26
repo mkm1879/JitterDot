@@ -1,24 +1,28 @@
 #JitterDot.config Used to set up options for JitterDot location anonymizer.
-#Configuration of Jittering 
-MinK=5
-MinGroup=5
-States=South Carolina, North Carolina
+#Output
+NAADSM=False
+InterspreadPlus=True
 
-#Configuration of Coordinate Projection for InterspreadPlus model file
+
+#Jittering 
+MinK=10
+MinGroup=8
+
+#Geography
+States=South Carolina
 UTMZone=17N
 
 #Field Mappings
-OriginalKey=HerdID
+OriginalKey=UnitID
 Latitude=Lat
 Longitude=Lon
-Animals=HerdSize
-Houses=Houses
+Animals=UnitSize
 AnimalType=AnimalType
-Integrator=Integrator
 Status=Status
 DaysInState=DaysInState
 DaysLeftInState=DaysLeftInState
-TestField=TestValue
+Integrator=Integrator
+
 
 #OriginalKey=PremiseKey
 #Latitude=Latitude
@@ -31,12 +35,11 @@ TestField=TestValue
 #DaysInState=DaysInState
 #DaysLeftInState=DaysLeftInState
 
-#Configuration of Logging.  This is pretty simple at this point and not often edited
-#    by users.  The main change would be the rootLogger level changed from info to error
-#    prior to distribution.  May also remove the stdout appender.
-#log4j.rootLogger=info, stdout, R
+
+#Logging
 log4j.rootLogger=error,R
 
+#Additional Log4J settings, not UI editable.
 log4j.appender.stdout=org.apache.log4j.ConsoleAppender
 log4j.appender.stdout.layout=org.apache.log4j.PatternLayout
 

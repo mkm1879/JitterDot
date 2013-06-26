@@ -18,8 +18,8 @@ public class DataFileLayoutModel extends AbstractTableModel {
 	private static final int MAXROWS = 50;
 	private LabeledCSVParser parser = null;
 	private String aColumns[];
-	private ArrayList<String> aHeaders = new ArrayList<String>();
 	private ArrayList<ArrayList<String>> aData = new ArrayList<ArrayList<String>>();
+	private File fData;
 	
 	public DataFileLayoutModel() {
 		super();
@@ -36,6 +36,7 @@ public class DataFileLayoutModel extends AbstractTableModel {
 	 * @throws IOException
 	 */
 	public void setDataFile( File fData ) throws IOException {
+		this.fData = fData;
 		parser = new LabeledCSVParser( new ExcelCSVParser( new FileInputStream( fData )));
 		aColumns = parser.getLabels();
 		ArrayList<String> aRow = new ArrayList<String>();
@@ -68,8 +69,10 @@ public class DataFileLayoutModel extends AbstractTableModel {
 			aData.add(aRow);
 			aRow = new ArrayList<String>();
 		}
-		
+		this.fireTableStructureChanged();
 	}
+	
+	public File getDataFile() { return fData; }
 	
 	@Override 
 	public boolean isCellEditable(int rowIndex, int columnIndex) {
@@ -118,6 +121,7 @@ public class DataFileLayoutModel extends AbstractTableModel {
 			return;
 		}
 		aData.get(rowIndex).set(columnIndex, (String)aValue);
+		this.fireTableCellUpdated(rowIndex, columnIndex);
 	}
 	
 	@Override

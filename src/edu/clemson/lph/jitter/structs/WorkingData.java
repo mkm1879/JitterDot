@@ -4,8 +4,10 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Set;
 
+import edu.clemson.lph.dialogs.ProgressDialog;
 import edu.clemson.lph.jitter.JitterDot;
 import edu.clemson.lph.jitter.files.ConfigFile;
 import edu.clemson.lph.jitter.geometry.Distance;
@@ -41,6 +43,7 @@ public class WorkingData extends ArrayList<WorkingDataRow> {
 	private Double dMedianLong = null;
 	private Double dMinLat = null;
 	private Double dMaxLat = null;
+	private ProgressDialog prog = null;
 	
 	private ArrayList<WorkingDataRow> aRemovedRows = new ArrayList<WorkingDataRow>();
 	
@@ -157,6 +160,7 @@ public class WorkingData extends ArrayList<WorkingDataRow> {
 		// Calculate Latitude
 		WorkingDataRow row;
 		if( iCurrentSort != SORT_SOUTH_NORTH) {
+			if( prog != null ) prog.setCurrentTask("Sorting by Latitude");
 			Collections.sort(this, new CompareLatitude() );
 			iCurrentSort = SORT_SOUTH_NORTH;
 			row = get(0);
@@ -179,6 +183,7 @@ public class WorkingData extends ArrayList<WorkingDataRow> {
 		// Calculate Longitude
 		WorkingDataRow row;
 		if( iCurrentSort != SORT_WEST_EAST) {
+			if( prog != null ) prog.setCurrentTask("Sorting by Longitude");
 			Collections.sort(this, new CompareLongitude() );
 			iCurrentSort = SORT_WEST_EAST;		
 			row = get(0);
@@ -228,32 +233,46 @@ public class WorkingData extends ArrayList<WorkingDataRow> {
 	}
 
 	/**
-	 * Sort using WorkingDataRow's compareTo method.
+	 * Sort based on Sort Direction.  If we guessed right, will already be sorted
+	 * from call to calcStats.
 	 */
 	public void sortMajorAxis() {
 		if( getSortDirection() == SORT_WEST_EAST ) {
-			Collections.sort(this, new CompareLongitude() );
-			iCurrentSort = SORT_WEST_EAST;
-			WorkingDataRow firstRow = this.get(0);
-			dMinLong = firstRow.getLongitudeIn();
-			WorkingDataRow lastRow = this.get(this.size()-1);
-			dMaxLong = lastRow.getLongitudeIn();
-			dMinLat = null;
-			dMaxLat = null;			
+			if( iCurrentSort != SORT_WEST_EAST) {
+				if( prog != null ) prog.setCurrentTask("Sorting by Longitude");
+				Collections.sort(this, new CompareLongitude() );
+				iCurrentSort = SORT_WEST_EAST;
+//				WorkingDataRow firstRow = this.get(0);
+//				dMinLong = firstRow.getLongitudeIn();
+//				WorkingDataRow lastRow = this.get(this.size()-1);
+//				dMaxLong = lastRow.getLongitudeIn();
+//				dMinLat = null;
+//				dMaxLat = null;		
+			}
 		}
 		else {
-			Collections.sort(this, new CompareLatitude() );
-			iCurrentSort = SORT_SOUTH_NORTH;
-			WorkingDataRow firstRow = this.get(0);
-			dMinLat = firstRow.getLongitudeIn();
-			WorkingDataRow lastRow = this.get(this.size()-1);
-			dMaxLat = lastRow.getLongitudeIn();
-			dMinLong = null;
-			dMaxLong = null;
+			if( iCurrentSort != SORT_SOUTH_NORTH) {
+				if( prog != null ) prog.setCurrentTask("Sorting by Latitude");
+				Collections.sort(this, new CompareLatitude() );
+				iCurrentSort = SORT_SOUTH_NORTH;
+//				WorkingDataRow firstRow = this.get(0);
+//				dMinLat = firstRow.getLongitudeIn();
+//				WorkingDataRow lastRow = this.get(this.size()-1);
+//				dMaxLat = lastRow.getLongitudeIn();
+//				dMinLong = null;
+//				dMaxLong = null;
+			}
 		}
 	}
 	
-	public ArrayList<String> getSmallGroups( int k ) {
+	/**
+	 * Look for all groups too small to identify individually and convert to Other.
+	 * @param minGroup Smallest group size for purposes of computing DK.
+	 * @return the list of small groups so we can make note of that.
+	 */
+	public ArrayList<String> getSmallGroups( int minGroup ) {
+		if( prog != null ) prog.setCurrentTask("Finding Small Animal Type Groups");
+
 		ArrayList<String> aSmallGroups = new ArrayList<String>();
 		HashMap<String, Integer> hGroupSizes = new HashMap<String, Integer>();
 		for( WorkingDataRow currentRow : this ) {
@@ -267,14 +286,15 @@ public class WorkingData extends ArrayList<WorkingDataRow> {
 		}
 		for( String sAnimalType : hGroupSizes.keySet() ) {
 			Integer iCount = hGroupSizes.get(sAnimalType);
-			if( iCount < k + 1 ) {
+			if( iCount < minGroup + 1 ) {
 				aSmallGroups.add(sAnimalType);
 			}
 		}
+		if( prog != null ) prog.setCurrentTask("Converting Small Animal Type Groups to 'Other'");
 		for( WorkingDataRow currentRow : this ) {
 			String sAnimalType = currentRow.getAnimalTypeIn();
 			Integer iCount = hGroupSizes.get(sAnimalType);
-			if( iCount >= k + 1 )
+			if( iCount >= minGroup + 1 )
 				currentRow.setAnimalType(sAnimalType);
 			else
 				currentRow.setAnimalType("Other");
@@ -283,8 +303,10 @@ public class WorkingData extends ArrayList<WorkingDataRow> {
 	}
 	
 	private void sanityCheck() {
+		if( prog != null ) prog.setCurrentTask("Performing coordinate sanity checks based on State Bounds");
+
 		boolean bHasStates = false;
-		ArrayList<String> selectedStates = ConfigFile.getStates();
+		List<String> selectedStates = ConfigFile.getStates();
 		if( selectedStates != null )
 			bHasStates = true;
 		Set<String> states = StateBounds.getStates();
@@ -301,8 +323,9 @@ public class WorkingData extends ArrayList<WorkingDataRow> {
 		}
 		for( WorkingDataRow row : this ) {
 			if( bounds != null ) {
+				// Why did I have to hack this????
 				if( row.getLongitudeIn() < bounds.getMinLong() || row.getLongitudeIn() > bounds.getMaxLong() ||
-						 row.getLatitudeIn() < bounds.getMinLat() || row.getLatitudeIn() > bounds.getMaxLat()) {
+						 row.getLatitudeIn() < bounds.getMinLat() || row.getLatitudeIn() > bounds.getMaxLat() ) {
 					Loggers.error( "Coordinate outside state bounds (" + row.getLongitudeIn() + ", " + row.getLatitudeIn() + " in row " + row.getOriginalKey() );
 					removeRow("Coordinate Outside State Bounds", row);			
 				}
@@ -337,7 +360,13 @@ public class WorkingData extends ArrayList<WorkingDataRow> {
 		aSmallGroups = getSmallGroups(k);
 		WorkingDataRow currentRow = null;
 		// Could potentially simplify things by extracting this loop, but it is a very small part of the complexity.
+		if( prog != null ) prog.setCurrentTask("Calculating DK for each point.");
 		for( int i = 0; i < iSize; i++ ) {
+			
+			if( ( i % 100 == 0 ) && prog != null ) {
+				String sRows = String.format("%,d", i);
+				prog.setCurrentTask("Calculating DK for each point. (" + sRows + " points complete.)");
+			}
 			boolean bDone[] = {false,false};
 			dClosestRows = new ArrayList<WorkingDataRow>();
 			dClosest = new ArrayList<Double>();
@@ -462,6 +491,11 @@ public class WorkingData extends ArrayList<WorkingDataRow> {
 	 * Process the whole structure ready for output.
 	 */
 	public void deIdentify() {
+		deIdentify( (ProgressDialog) null );
+	}
+	
+	public void deIdentify( ProgressDialog prog ) {
+		this.prog = prog;
 		setSortDirection();
 		cleanup();
 		annonymizeIntegrator();
@@ -477,6 +511,7 @@ public class WorkingData extends ArrayList<WorkingDataRow> {
 	}
 
 	private void jitter() {
+		if( prog != null ) prog.setCurrentTask("Performing random jitter on each row");
 		RandomNumbers rn = new RandomNumbers();
 		WorkingDataRow aRow = get(0);
 		Double dK = aRow.getDK();
@@ -518,6 +553,7 @@ public class WorkingData extends ArrayList<WorkingDataRow> {
 	}
 	
 	private void annonymizeIntegrator() {
+		if( prog != null ) prog.setCurrentTask("Converting integrator to anonymous 'Co'+ X format");
 		HashMap<String, String> map = new HashMap<String, String>();
 		int iCo = 1;
 		for( WorkingDataRow row : this ) {
@@ -539,6 +575,7 @@ public class WorkingData extends ArrayList<WorkingDataRow> {
 	}
 	
 	private void addUTMCoordinates() {
+		if( prog != null ) prog.setCurrentTask("Calculating UTM Coordinates for each row");
 		int iZone = UTMProjection.getBestZone(getMedianLongitude());
 		String sHemisphere = UTMProjection.getHemisphere(getMedianLatitude());
 		UTMProjection utm = null;
@@ -570,7 +607,7 @@ public class WorkingData extends ArrayList<WorkingDataRow> {
 	
 	private void removeRow( String sMsg, WorkingDataRow row ) {
 		if( !aRemovedRows.contains(row) ) {
-			JitterDot.fileError.printErrorRow( sMsg, row );
+			JitterDot.getErrorFile().printErrorRow( sMsg, row );
 			aRemovedRows.add(row);
 		}
 	}

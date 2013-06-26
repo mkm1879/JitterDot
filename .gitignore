@@ -11,5 +11,7 @@ miller.c
 lib
 *.xls
 *.xlsx
+*.config
+*.txt
 
 

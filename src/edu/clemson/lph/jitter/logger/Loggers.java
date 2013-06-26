@@ -6,16 +6,22 @@ import java.io.PrintStream;
 import org.apache.log4j.Logger;
 import org.apache.log4j.PropertyConfigurator;
 
+import edu.clemson.lph.jitter.files.ConfigFile;
+
 public class Loggers {
 	static Logger logger = null;
 	
 	public static Logger getLogger() {
 		if( logger == null ) {
-			logger = Logger.getLogger("edu.clemson.lph.jitter.logger");
-		    PropertyConfigurator.configure("JitterDot.config");
+			refresh();
 		    logger.info("Entering application.");
 		}
 		return logger;
+	}
+	
+	public static void refresh() {
+		logger = Logger.getLogger("edu.clemson.lph.jitter.logger");
+	    PropertyConfigurator.configure(ConfigFile.getConfigFile().getAbsolutePath());		
 	}
 	
 	public static void error( Object oMsg ) {
