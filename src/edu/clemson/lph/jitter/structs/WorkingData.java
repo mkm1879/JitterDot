@@ -1,5 +1,9 @@
 package edu.clemson.lph.jitter.structs;
 
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -357,7 +361,6 @@ public class WorkingData extends ArrayList<WorkingDataRow> {
 		sortMajorAxis();
 		ArrayList<WorkingDataRow> dClosestRows = null;
 		ArrayList<Double> dClosest = null;
-		aSmallGroups = getSmallGroups(k);
 		WorkingDataRow currentRow = null;
 		// Could potentially simplify things by extracting this loop, but it is a very small part of the complexity.
 		if( prog != null ) prog.setCurrentTask("Calculating DK for each point.");
@@ -497,11 +500,11 @@ public class WorkingData extends ArrayList<WorkingDataRow> {
 	public void deIdentify( ProgressDialog prog ) {
 		this.prog = prog;
 		setSortDirection();
-		cleanup();
 		annonymizeIntegrator();
-		cleanup();
+		aSmallGroups = getSmallGroups(k);
+		saveSmallGroups( aSmallGroups );
 		sanityCheck();
-		cleanup();
+		cleanup();		
 		calcDKs();
 		cleanup();
 		jitter();
@@ -609,6 +612,20 @@ public class WorkingData extends ArrayList<WorkingDataRow> {
 		if( !aRemovedRows.contains(row) ) {
 			JitterDot.getErrorFile().printErrorRow( sMsg, row );
 			aRemovedRows.add(row);
+		}
+	}
+	
+	private void saveSmallGroups( ArrayList<String> aSmallGroups ) {
+		String sErrorFilePath = JitterDot.getErrorFile().getFilePath();
+		String sSmallGroupsPath = sErrorFilePath.substring(0, sErrorFilePath.indexOf("ERROR")) + "SmallGroups.txt";
+		try {
+			PrintWriter pw = new PrintWriter( new FileWriter( sSmallGroupsPath ) );
+			for( String sGroup : aSmallGroups ) {
+				pw.println(sGroup);
+			}
+			pw.close();
+		} catch (IOException e) {
+			Loggers.error(e);
 		}
 	}
 	

@@ -138,7 +138,8 @@ public class SourceCSVFile {
 			if( dataRow == null || sOriginalKey == null || dLongitudeIn == null || dLatitudeIn == null || sAnimalType == null
 					|| ( Math.abs(dLongitudeIn) < 0.0001 && Math.abs(dLatitudeIn) < 0.0001 ) ) {
 				Loggers.getLogger().info("Row " + sOriginalKey + " could not be used ");
-				JitterDot.getErrorFile().printErrorRow("Row missing required data", aLine);
+				OutputCSVFile fError = JitterDot.getErrorFile();
+				fError.printErrorRow("Row missing required data", aLine);
 				aData.setRows(--iRows);
 				continue;
 			}

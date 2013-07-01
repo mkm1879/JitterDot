@@ -3,7 +3,6 @@ package edu.clemson.lph.jitter.ui;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -12,27 +11,28 @@ import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
 
 import edu.clemson.lph.dialogs.MessageDialog;
-import edu.clemson.lph.jitter.JitterDot;
 import edu.clemson.lph.jitter.JitterThread;
 import edu.clemson.lph.jitter.files.ConfigFile;
-import edu.clemson.lph.jitter.files.InvalidInputException;
-import edu.clemson.lph.jitter.files.OutputCSVFile;
 import edu.clemson.lph.jitter.files.SourceCSVFile;
-import edu.clemson.lph.jitter.geometry.InvalidCoordinateException;
 import edu.clemson.lph.jitter.logger.Loggers;
-import edu.clemson.lph.jitter.structs.WorkingData;
 
 public class ConfigController implements TableModelListener, ActionListener {
 	private ConfigFrame frame;
 	private boolean bMapComplete = false;
 	private String sDataFile;
+	private DataFileLayoutModel model;
 
 	public ConfigController() {
 		frame = (ConfigFrame)null;
+		model = new DataFileLayoutModel();
+		model.addTableModelListener(this);
+
 	}
 	
 	public ConfigController(ConfigFrame frame) {
 		this.frame = frame;
+		model = new DataFileLayoutModel();
+		model.addTableModelListener(this);
 	}
 	
 	public void loadConfig() {
@@ -80,8 +80,13 @@ public class ConfigController implements TableModelListener, ActionListener {
 	
 	public void setDataFile( File fData ) {
 		this.sDataFile = fData.getPath();
-		frame.setLayoutTableModelData(fData);
-		loadConfig();
+		try {
+			model.setDataFile(fData);
+			frame.setLayoutTableModel(model);
+			loadConfig();
+		} catch (IOException e) {
+			Loggers.error(e);
+		}
 	}
 
 	
@@ -139,10 +144,6 @@ public class ConfigController implements TableModelListener, ActionListener {
 		thread.runJitter();
 		
 	}
-	
-	public boolean isMapComplete() {
-		return bMapComplete;
-	}
 
 	@Override
 	public void tableChanged(TableModelEvent e) {
@@ -170,6 +171,7 @@ public class ConfigController implements TableModelListener, ActionListener {
 	}
 	
 	private void checkCompleteness() {
+		boolean bRunEnabled = true;
 		List<String> aValues = new ArrayList<String>();
 		for( int i = 0; i < frame.getTable().getColumnCount(); i++ ) {
 			String sValue = (String)frame.getTable().getValueAt(0, i);
@@ -186,11 +188,16 @@ public class ConfigController implements TableModelListener, ActionListener {
 		}
 		bMapComplete = bFoundAll;
 		String sWarnings = new String();
-		if( !frame.isInterspreadRequested() && !frame.isNAADSMRequested() )
+		if( !frame.isInterspreadRequested() && !frame.isNAADSMRequested() ) {
 			sWarnings += "No Output Requested\n";
-		if( !bMapComplete )
+			bRunEnabled = false;
+		}
+		if( !bFoundAll ) {
 			sWarnings += "Column Mapping Incomplete";
+			bRunEnabled = false;
+		}
 		frame.setWarnings( sWarnings );		
+		frame.setRunEnabled( bRunEnabled );
 	}
 
 	@Override

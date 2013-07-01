@@ -10,6 +10,7 @@ import java.lang.reflect.Method;
 import org.junit.Before;
 import org.junit.Test;
 
+import edu.clemson.lph.jitter.files.ConfigFile;
 import edu.clemson.lph.jitter.files.InvalidInputException;
 import edu.clemson.lph.jitter.files.SourceCSVFile;
 import edu.clemson.lph.jitter.geometry.Distance;
@@ -23,7 +24,7 @@ public class WorkingDataTests {
 
 	@Before
 	public void setUp() throws Exception {
-		File fileIn = new File( "Test.csv");
+		File fileIn = new File( "TestFiles/Test.csv");
 		try {
 			source = new SourceCSVFile( fileIn );
 			aData = source.getData();		
@@ -101,11 +102,12 @@ public class WorkingDataTests {
 	 */
 	@Test
 	public void testGetMedianLongOdd() {
-		File fileIn = new File( "Test2.csv");
+		File fileIn = new File( "TestFiles/Test2.csv");
 		try {
 			source = new SourceCSVFile( fileIn );
 			WorkingData aData2 = source.getData();	
 			aData2.setSortDirection(WorkingData.SORT_SOUTH_NORTH);
+			System.out.println("aData2.medianLong = " + aData2.getMedianLongitude());
 			assertTrue( Math.abs(aData2.getMedianLongitude() - (-81.6194) ) < TOLERANCE );
 		} catch (FileNotFoundException e) {
 			fail(e.getMessage());

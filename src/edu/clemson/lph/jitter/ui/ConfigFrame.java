@@ -15,12 +15,10 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.UIManager;
 
-import java.awt.FlowLayout;
 import java.beans.Beans;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -29,16 +27,13 @@ import javax.swing.JCheckBox;
 import javax.swing.border.TitledBorder;
 import javax.swing.table.TableColumn;
 
-import edu.clemson.lph.jitter.files.ConfigFile;
 import edu.clemson.lph.jitter.geometry.StateBounds;
 import edu.clemson.lph.jitter.logger.Loggers;
 import javax.swing.JList;
 import javax.swing.ScrollPaneConstants;
 import javax.swing.JLabel;
 import java.awt.GridLayout;
-import javax.swing.SwingConstants;
 import javax.swing.border.EtchedBorder;
-import javax.swing.filechooser.FileFilter;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
 import java.awt.Font;
@@ -46,9 +41,6 @@ import java.awt.Color;
 import java.awt.SystemColor;
 import javax.swing.JSpinner;
 import javax.swing.SpinnerNumberModel;
-import java.awt.GridBagLayout;
-import java.awt.GridBagConstraints;
-import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
@@ -58,7 +50,6 @@ public class ConfigFrame extends JFrame {
 
 	private JPanel contentPane;
 	private JTable tblDataFileLayout;
-	private DataFileLayoutModel model;
 	private JCheckBox ckDetailedLogging;
 	private JCheckBox ckNaadsm;
 	private JCheckBox ckInterspreadPlus;
@@ -66,6 +57,8 @@ public class ConfigFrame extends JFrame {
 	private JTextArea lblWarnings;
 	private JSpinner spinMinK;
 	private JSpinner spinMinGroup;
+
+	private JMenuItem mntmRun;
 
 	/**
 	 * Launch the application.
@@ -89,7 +82,6 @@ public class ConfigFrame extends JFrame {
 	}
 	
 	JTable getTable() { return tblDataFileLayout; }
-	DataFileLayoutModel getModel() { return model; }
 	String getBaseTitle() { return "JitterDot Configuration Editor"; }
 
 	/**
@@ -166,8 +158,9 @@ public class ConfigFrame extends JFrame {
 			}
 		});
 		
-		JMenuItem mntmRun = new JMenuItem("Run Deidentification");
+		mntmRun = new JMenuItem("Run Deidentification");
 		mnFile.add(mntmRun);
+		mntmRun.setEnabled(false);
 		mntmRun.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent arg0) {
@@ -280,12 +273,14 @@ public class ConfigFrame extends JFrame {
 		tblDataFileLayout.setTableHeader(null);
 		spDateFileLayout.setViewportView(tblDataFileLayout);
 		control.loadConfig();
-//		control.setDataFile( new File( "Test.csv"));
 	}
 	
-	void setLayoutTableModelData( File fData ) {
-		try {
-			model = new DataFileLayoutModel( fData );
+	/**
+	 * Package scope, only accessed by controller.  Do the graphical part of laying out the table 
+	 * based on the table model controlled by Controller.
+	 * @param model DataFileLayoutModel
+	 */
+	void setLayoutTableModel( DataFileLayoutModel model ) {
 			tblDataFileLayout.setModel(model);
 			// Override the first rows cells to select mapping as combobox, all others still text boxes
 			ConfigTableCellEditor cellEdit = new ConfigTableCellEditor();
@@ -306,11 +301,6 @@ public class ConfigFrame extends JFrame {
 			}
 			tblDataFileLayout.setRowHeight(0,25);
 			tblDataFileLayout.setRowHeight(1,20);
-			model.addTableModelListener(control);
-
-		} catch (IOException e) {
-			Loggers.error(e);
-		}
 	}
 	
 	// Getters and Setters for settings on form
@@ -414,5 +404,9 @@ public class ConfigFrame extends JFrame {
 		else {
 			lblWarnings.setVisible(false);
 		}
+	}
+	
+	public void setRunEnabled( boolean bRunEnabled ) {
+		mntmRun.setEnabled(bRunEnabled);		
 	}
 }

@@ -23,11 +23,12 @@ public class OutputCSVFile {
 	private final static String aColNamesINTERSPREAD[] = {"HerdID","HerdSize","Houses","AnimalType","Integrator",
         "Easting", "Northing", "UTMZone", "Status","DaysInState","DaysLeftInState"};
 	private String aColNames[];
+	private String sFilePath;
 	
 	
 	public OutputCSVFile( File fIn, OutputFileType type ) throws FileNotFoundException {
 		this.type = type;
-		String sFilePath = fIn.getPath();
+		sFilePath = fIn.getPath();
 		sFilePath = sFilePath.substring(0, sFilePath.lastIndexOf('.'));
 		switch( type ) {
 		case KEY:
@@ -101,6 +102,10 @@ public class OutputCSVFile {
 			print( sValue );
 		}
 		printer.println();
+	}
+	
+	public String getFilePath() {
+		return sFilePath;
 	}
 	
 	public void printErrorRow( String sError, WorkingDataRow row ) {

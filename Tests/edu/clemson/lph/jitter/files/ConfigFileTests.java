@@ -92,7 +92,7 @@ public class ConfigFileTests {
 	@Test
 	public void testValidateDataFile() {
 		assertTrue(ConfigFile.validateDataFile("TestFiles/Test.csv"));
-		assertFalse(ConfigFile.validateDataFile("TestFiles/Test2.csv"));
+		assertFalse(ConfigFile.validateDataFile("TestFiles/TestBad.csv"));
 	}
 	
 	@Test

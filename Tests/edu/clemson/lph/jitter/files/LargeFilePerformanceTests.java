@@ -34,9 +34,13 @@ public class LargeFilePerformanceTests {
 	public void testPerformance() {
 		long startTime = System.currentTimeMillis();
 		// Invoke private subroutine
-		File fileIn = new File( "HerdsPlus.csv");
-		JitterDot.setup(new String[] {fileIn.getName()});
+		File fileIn = new File( "TestFiles/HerdsPlus.csv");
+		ConfigFile.setConfigFilePath("TestFiles/JitterDotConfigTest.config");
+		OutputCSVFile fileError = null;
+		JitterDot.setErrorFile(fileError);
 		try {
+			fileError = new OutputCSVFile( fileIn, OutputCSVFile.OutputFileType.ERROR );
+			JitterDot.setErrorFile(fileError);
 			source = new SourceCSVFile( fileIn );
 			aData = source.getData();	
 			System.out.println("getData() took " + (System.currentTimeMillis() - startTime ) + " milliseconds");
@@ -73,6 +77,7 @@ public class LargeFilePerformanceTests {
 			fileOut = new OutputCSVFile( new File( "TestOutLarge.csv"), OutputCSVFile.OutputFileType.INTERSPREAD );
 			fileOut.print(aData);			
 			System.out.println("print took " + (System.currentTimeMillis() - startTime ) + " milliseconds");
+			if( fileError != null ) fileError.close();
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 			fail(e.getMessage());
