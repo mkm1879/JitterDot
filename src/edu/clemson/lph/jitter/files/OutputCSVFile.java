@@ -7,7 +7,6 @@ import java.io.IOException;
 
 import com.Ostermiller.util.*;
 
-import edu.clemson.lph.controls.GPSTextField;
 import edu.clemson.lph.jitter.logger.Loggers;
 import edu.clemson.lph.jitter.structs.WorkingData;
 import edu.clemson.lph.jitter.structs.WorkingDataRow;
@@ -28,24 +27,23 @@ public class OutputCSVFile {
 	
 	public OutputCSVFile( File fIn, OutputFileType type ) throws FileNotFoundException {
 		this.type = type;
-		String sFileName = fIn.getName();
-		sFileName = sFileName.substring(0, sFileName.lastIndexOf('.'));
-		File fOut;
+		String sFilePath = fIn.getPath();
+		sFilePath = sFilePath.substring(0, sFilePath.lastIndexOf('.'));
 		switch( type ) {
 		case KEY:
-			sFileName = sFileName + "KEY.csv";
+			sFilePath = sFilePath + "KEY.csv";
 			aColNames = aColNamesKey;
 			break;
 		case NAADSM:
-			sFileName = sFileName + "NAADSM.csv";
+			sFilePath = sFilePath + "NAADSM.csv";
 			aColNames = aColNamesNAADSM;
 			break;
 		case INTERSPREAD:
-			sFileName = sFileName + "INTERSPREAD.csv";
+			sFilePath = sFilePath + "INTERSPREAD.csv";
 			aColNames = aColNamesINTERSPREAD;
 			break;
 		case ERROR:
-			sFileName = sFileName + "ERRORS.csv";
+			sFilePath = sFilePath + "ERRORS.csv";
 			// Because some errors are bad enough we never construct a WorkingDataRow
 			// we use the column structure from the source with the addition of 
 			// a column for the type of error.
@@ -55,8 +53,7 @@ public class OutputCSVFile {
 				aColNames[i] = WorkingData.aColumns[i-1];
 			break;
 		}
-		fOut = new File( sFileName );
-		printer = new CSVPrinter( new FileOutputStream( fOut ) );
+		printer = new CSVPrinter( new FileOutputStream( sFilePath ) );
 		printer.println(aColNames);
 	}
 	
@@ -141,7 +138,7 @@ public class OutputCSVFile {
 			printer.flush();
 			printer.close();
 		} catch (IOException e) {
-			Loggers.error(e);
+			Loggers.info(e);
 		}
 	}
 

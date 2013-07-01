@@ -19,7 +19,7 @@ public class SourceCSVFileTests {
 
 	@Before
 	public void setUp() throws Exception {
-		File fileIn = new File( "Test.csv");
+		File fileIn = new File( "TestFiles/Test.csv");
 		try {
 			source = new SourceCSVFile( fileIn );
 		} catch (FileNotFoundException e) {
@@ -31,7 +31,7 @@ public class SourceCSVFileTests {
 
 	@Test
 	public void testSourceCSVFile() {
-		File fileIn = new File( "Test.csv");
+		File fileIn = new File( "TestFiles/Test.csv");
 		try {
 			source = new SourceCSVFile( fileIn );
 			assertTrue( source != null );

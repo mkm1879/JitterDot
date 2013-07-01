@@ -16,22 +16,52 @@ import java.util.StringTokenizer;
 
 import edu.clemson.lph.jitter.logger.Loggers;
 
+/**
+ * Usually used as global settings for the application.
+ * Globals == BAD.  I know, I know!  But in 99% of cases this realistically reflects what
+ * we are trying to do.  Simply read a bunch of constants from a config file.
+ * 
+ * For the 1% we allow a saveConfigAs method that saves a different named config file.  An open 
+ * config file allows changing all the globals to those values.  Values are locked (turned into
+ * true constants before actual processing begins.)
+ * 
+ * The odd structure of this class uses public instance methods exclusively for testing.  Most calls by the 
+ * application are facilitated by static wrapper methods that simply call the instance methods against
+ * the static singleton instance.
+ * Tests can test against specific configurations with:
+ * ConfigFile testConfig = new ConfigFile( "filepath" );
+ * testConfig._[Static Wrapper Method Name]
+ * In this way, a whole suite of configurations vs. data files can be tested in parallel while
+ * the application code can still use the simple static calls to the global configuration.
+ * @author mmarti5
+ *
+ */
 public class ConfigFile {
-	private static String sFilePath = "./JitterDot.config";
-	private static File fFile;
-	private static Properties props = null;
-	private static ArrayList<String> lines;
-	private static boolean bLoggerChanged = false;
-	private static boolean bLocked = false;
+	private static final String DEFAULT_CONFIG_FILE = "./JitterDot.config";
+	private static ConfigFile singleton = new ConfigFile( DEFAULT_CONFIG_FILE );
+	private String sFilePath = "./JitterDot.config";
+	private File fFile;
+	private Properties props = null;
+	private ArrayList<String> lines;
+	private boolean bLoggerChanged = false;
+	private boolean bLocked = false;
+	
+	/**
+	 * Construct a non-global instance of configuration.  Normally only for testing.
+	 * @param sFilePath
+	 */
+	public ConfigFile( String sFilePath ) {
+		this.sFilePath = sFilePath;
+	}
 	
 	/**
 	 * Block further modification for access in run thread.
 	 */
-	public static void lockConfig() {
+	public void _lockConfig() {
 		bLocked = true;
 	}
 	
-	private static boolean testLock() {
+	private boolean testLock() {
 		if( bLocked ) {
 			Loggers.error( new ConcurrentModificationException("Attempt to modify config during execution or jitter") );
 		}
@@ -41,7 +71,7 @@ public class ConfigFile {
 	/**
 	 * Load the Properties object to read values.  We don't read based on section.
 	 */
-	private static void initRead() {
+	private void initRead() {
 		if( props == null ) {
 			if( testLock() ) return;
 			props = new Properties();
@@ -58,7 +88,30 @@ public class ConfigFile {
 		}
 	}
 	
-	private static List<String> getStringList(String sKey) {
+	/**
+	 * We don't use props.store because it loses sections and comments.
+	 * The save commands edit a literal representation of the lines in the file.
+	 * This creates the array of lines for use in all set commands.
+	 */
+	private void initWrite() {
+		if( lines == null ) {
+			if( testLock() ) return;
+			lines = new ArrayList<String>();
+			try {
+				fFile = new File(sFilePath);
+				BufferedReader br = new BufferedReader( new FileReader( fFile ));
+				String sLine = null;
+				while( (sLine = br.readLine()) != null ) {
+					lines.add(sLine);
+				}
+				br.close();
+			} catch (IOException e) {
+				Loggers.error(e);
+			}
+		}
+	}
+
+	private List<String> getStringList(String sKey) {
 		List<String> aRet = new ArrayList<String>();
 		initRead();
 		String sValue = props.getProperty(sKey);
@@ -74,7 +127,7 @@ public class ConfigFile {
 		return aRet;
 	}
 	
-	private static Integer getInt(String sKey) {
+	private Integer getInt(String sKey) {
 		initRead();
 		Integer iRet = null;
 		String sValue = props.getProperty(sKey);
@@ -93,7 +146,7 @@ public class ConfigFile {
 	}
 	
 	@SuppressWarnings("unused")
-	private static Double getDouble(String sKey) {
+	private Double getDouble(String sKey) {
 		initRead();
 		Double dRet = null;
 		String sValue = props.getProperty(sKey);
@@ -111,7 +164,7 @@ public class ConfigFile {
 		return dRet;
 	}
 	
-	private static String getString(String sKey) {
+	private String getString(String sKey) {
 		initRead();
 		String sRet = null;
 		String sValue = props.getProperty(sKey);
@@ -126,11 +179,11 @@ public class ConfigFile {
 	
 	// Specific public getters and setters
 	
-	public static List<String> getStates() {
+	public List<String> _getStates() {
 		return getStringList("States");
 	}
 	
-	public static void setStates( List<String> aStates ) {
+	public void _setStates( List<String> aStates ) {
 		if( testLock() ) return;
 		StringBuffer sb = new StringBuffer();
 		int i = 0;
@@ -139,14 +192,14 @@ public class ConfigFile {
 			if( ++i < aStates.size() )
 				sb.append(',');
 		}
-		setValue("States", sb.toString(), "Geography");
+		_setValue("States", sb.toString(), "Geography");
 	}
 	
 	/**
 	 * Get the value of K in our privacy setting.
 	 * @return minimum K anonymity required
 	 */
-	public static Integer getMinK() {
+	public Integer _getMinK() {
 		return getInt("MinK");
 	}
 	
@@ -154,15 +207,15 @@ public class ConfigFile {
 	 * Set the value of K in our privacy setting.
 	 * @param iMinK Integer minimum K anonymity required
 	 */
-	public static void setMinK( Integer iMinK ) {
-		setValue("MinK", iMinK.toString(), "Jittering");
+	public void _setMinK( Integer iMinK ) {
+		_setValue("MinK", iMinK.toString(), "Jittering");
 	}
 	
 	/**
 	 * Get the value of the smallest grouping of animal types for calculation of K distance
 	 * @return Integer minimum group size.  Uses K if not otherwise specified.
 	 */
-	public static Integer getMinGroup() {
+	public Integer _getMinGroup() {
 		Integer iGroup = getInt("MinGroup");
 		if( iGroup == null )
 			iGroup = getMinGroup();
@@ -173,13 +226,13 @@ public class ConfigFile {
 	 * Set the value of the smallest grouping of animal types for calculation of K distance.
 	 * @param iMinGroup Integer minimum group size.  Uses K if not otherwise specified.
 	 */
-	public static void setMinGroup( Integer iMinGroup ) {
-		setValue("MinGroup", iMinGroup.toString(), "Jittering");
+	public void _setMinGroup( Integer iMinGroup ) {
+		_setValue("MinGroup", iMinGroup.toString(), "Jittering");
 	}
 	
 	
 	// Currently not using user configured UTMZones but calculating from median longitude.
-	public static Integer getUTMZoneNum() {
+	public Integer _getUTMZoneNum() {
 		Integer iRet = null;
 		String sZone = getString("UTMZone");
 		if( sZone == null ) {
@@ -200,7 +253,7 @@ public class ConfigFile {
 	}
 
 	// Currently not using user configured UTMZones but calculating from median longitude.
-	public static String getZoneHemisphere() {
+	public String _getZoneHemisphere() {
 		String sRet = null;
 		String sZone = getString("UTMZone");
 		if( sZone == null ) {
@@ -217,38 +270,38 @@ public class ConfigFile {
 		return sRet;
 	}
 	
-	public static void setUTMZone( String sZone ) {
-		setValue("UTMZone", sZone, "Geography");
+	public void _setUTMZone( String sZone ) {
+		_setValue("UTMZone", sZone, "Geography");
 	}
 	
-	public static boolean isNAADSMRequested() {
+	public boolean _isNAADSMRequested() {
 		String sNAADSM = getString("NAADSM");
 		return ( sNAADSM != null && sNAADSM.equalsIgnoreCase( "True" ) );
 	}
 	
-	public static void setNAADSMRequested( boolean bNAADSM ) {
+	public void _setNAADSMRequested( boolean bNAADSM ) {
 		if( testLock() ) return;
 		String sRequested = null;
 		if( bNAADSM ) 
 			sRequested = "True";
 		else 
 			sRequested = "False";
-		setValue("NAADSM", sRequested, "Output");
+		_setValue("NAADSM", sRequested, "Output");
 	}
 	
-	public static boolean isInterspreadRequested() {
+	public boolean _isInterspreadRequested() {
 		String sInterspread = getString("InterspreadPlus");
 		return ( sInterspread != null && sInterspread.equalsIgnoreCase( "True" ) );
 	}
 	
-	public static void setInterspreadRequested( boolean bInterspread ) {
+	public void _setInterspreadRequested( boolean bInterspread ) {
 		if( testLock() ) return;
 		String sRequested = null;
 		if( bInterspread ) 
 			sRequested = "True";
 		else 
 			sRequested = "False";
-		setValue("InterspreadPlus", sRequested, "Output");
+		_setValue("InterspreadPlus", sRequested, "Output");
 	}
 
 	/**
@@ -256,8 +309,8 @@ public class ConfigFile {
 	 * @param sField
 	 * @param sMappedTo
 	 */
-	public static void setFieldMap( String sField, String sMappedTo ) {
-		setValue( sField, sMappedTo, "Field Mappings");
+	public void _setFieldMap( String sField, String sMappedTo ) {
+		_setValue( sField, sMappedTo, "Field Mappings");
 	}
 	
 	/**
@@ -265,14 +318,15 @@ public class ConfigFile {
 	 * @param sColumnOut output column.
 	 * @return String input column name.
 	 */
-	public static String mapColumn( String sColumnOut ) {
+	public String _mapColumn( String sColumnOut ) {
+		initRead();
 		String sColumnIn = props.getProperty(sColumnOut);
 		if( sColumnIn == null ) 
 			sColumnIn = sColumnOut;
 		return sColumnIn;
 	}
 	
-	public static boolean isDetailedLoggingRequested() {
+	public boolean _isDetailedLoggingRequested() {
 		boolean bRet = false;
 		String sRootLogger = getString( "log4j.rootLogger" );
 		if( sRootLogger != null && sRootLogger.contains("info")) 
@@ -280,7 +334,7 @@ public class ConfigFile {
 		return bRet;
 	}
 	
-	public static void setDetailedLoggingRequested( boolean bDetailed ) {
+	public void _setDetailedLoggingRequested( boolean bDetailed ) {
 		if( testLock() ) return;
 		boolean bPrior = isDetailedLoggingRequested();
 		if( bPrior != bDetailed ) {
@@ -289,7 +343,7 @@ public class ConfigFile {
 				sRootLogger = "info,stdout,R";
 			else
 				sRootLogger = "error,R";
-			setValue("log4j.rootLogger", sRootLogger, "Logging");
+			_setValue("log4j.rootLogger", sRootLogger, "Logging");
 			bLoggerChanged = true;
 		}
 	}
@@ -301,7 +355,7 @@ public class ConfigFile {
 	 * @param sValue String value to the right of the =
 	 * @param sSection String that follows # in section header comment.  Requires just enough to be unique.
 	 */
-	public static void setValue( String sProp, String sValue, String sSection ) {
+	public void _setValue( String sProp, String sValue, String sSection ) {
 		if( testLock() ) return;
 		initRead();
 		initWrite();
@@ -334,17 +388,17 @@ public class ConfigFile {
 			}
 			if( !bSection ) {
 				makeSection( sSection );
-				setValue( sProp, sValue, sSection);
+				_setValue( sProp, sValue, sSection);
 			}
 		}
 	}
 	
-	private static void makeSection( String sSection ) {
+	private void makeSection( String sSection ) {
 		lines.add(1, "#" + sSection);
 		lines.add(2,"");
 	}
 	
-	public static List<String> listMapKeys() {
+	public List<String> _listMapKeys() {
 		initRead();
 		initWrite();
 		List<String> aKeys = new ArrayList<String>();
@@ -368,7 +422,7 @@ public class ConfigFile {
 	 * The save commands edit a literal representation of the lines in the file.
 	 * This saves the config settings back to the config file.
 	 */	
-	public static void saveConfig() {
+	public void _saveConfig() {
 		if( testLock() ) return;
 		if( lines == null ) return;
 		try {
@@ -391,7 +445,7 @@ public class ConfigFile {
 	 * This saves the config settings back to a new Config File.
 	 * @param Stirng with new path
 	 */	
-	public static void saveConfigAs( String sNewFilePath) {
+	public void _saveConfigAs( String sNewFilePath) {
 		if( testLock() ) return;
 		if( lines == null ) return;
 		try {
@@ -418,7 +472,7 @@ public class ConfigFile {
 	 * NOTE: Logging will continue with existing settings.
 	 * @param sNewFilePath Relative or absolute filename for config file.
 	 */
-	public static void setConfigFilePath( String sNewFilePath ) {
+	public void _setConfigFilePath( String sNewFilePath ) {
 		if( testLock() ) return;
 		sFilePath = sNewFilePath;
 		fFile = new File( sNewFilePath );
@@ -432,18 +486,18 @@ public class ConfigFile {
 	 * Get the current config file
 	 * @return String relative or absolute path to config file.
 	 */
-	public static File getConfigFile() {
+	public File _getConfigFile() {
 		return fFile;
 	}
 	
 	
-	public static boolean validateDataFile( String sDataFile ) {
+	public boolean _validateDataFile( String sDataFile ) {
 		boolean bRet = true;
 		try {
 			SourceCSVFile source = new SourceCSVFile( new File( sDataFile) );
 			String[] aCols = source.getColumns();
 			for( String sKey : SourceCSVFile.getEssentialColumns() ) {
-				String sMappedCol = ConfigFile.mapColumn(sKey);
+				String sMappedCol = this._mapColumn(sKey);
 				boolean bFound = false;
 				for( String sCol : aCols ) {
 					if( sCol.equalsIgnoreCase(sMappedCol) ) {
@@ -468,27 +522,33 @@ public class ConfigFile {
 	}
 
 	
-	/**
-	 * We don't use props.store because it loses sections and comments.
-	 * The save commands edit a literal representation of the lines in the file.
-	 * This creates the array of lines for use in all set commands.
-	 */
-	private static void initWrite() {
-		if( lines == null ) {
-			if( testLock() ) return;
-			lines = new ArrayList<String>();
-			try {
-				fFile = new File(sFilePath);
-				BufferedReader br = new BufferedReader( new FileReader( fFile ));
-				String sLine = null;
-				while( (sLine = br.readLine()) != null ) {
-					lines.add(sLine);
-				}
-				br.close();
-			} catch (IOException e) {
-				Loggers.error(e);
-			}
-		}
-	}
+	public ConfigFile getConfig() { return singleton; }
+	
+	// Static methods simply call same method on Singleton instance
+	public static void lockConfig() { singleton._lockConfig(); }
+	public static List<String> getStates() { return singleton._getStates(); }
+	public static void setStates( List<String> aStates ) { singleton._setStates(aStates); }
+	public static Integer getMinK() { return singleton._getMinK(); }
+	public static void setMinK( Integer iMinK ) { singleton._setMinK(iMinK); }
+	public static Integer getMinGroup() { return singleton._getMinGroup(); }
+	public static void setMinGroup( Integer iMinGroup ) { singleton._setMinGroup(iMinGroup); }
+	public static Integer getUTMZoneNum() { return singleton._getUTMZoneNum(); }
+	public static String getZoneHemisphere() { return singleton._getZoneHemisphere(); }
+	public static void setUTMZone( String sZone ) { singleton._setUTMZone(sZone); }
+	public static boolean isNAADSMRequested() { return singleton._isNAADSMRequested(); }
+	public static void setNAADSMRequested( boolean bNAADSM ) { singleton._setNAADSMRequested(bNAADSM); }
+	public static boolean isInterspreadRequested() { return singleton._isInterspreadRequested(); }
+	public static void setInterspreadRequested( boolean bInterspread ) { singleton._setInterspreadRequested(bInterspread); }
+	public static void setFieldMap( String sField, String sMappedTo ) { singleton._setFieldMap(sField, sMappedTo); }
+	public static String mapColumn( String sColumnOut ) { return singleton._mapColumn(sColumnOut); }
+	public static boolean isDetailedLoggingRequested() { return singleton._isDetailedLoggingRequested(); }
+	public static void setDetailedLoggingRequested( boolean bDetailed ) { singleton._setDetailedLoggingRequested(bDetailed); }
+//	public static void setValue( String sProp, String sValue, String sSection ) { singleton._setValue(sProp, sValue, sSection); }
+	public static List<String> listMapKeys() { return singleton._listMapKeys(); }
+	public static void saveConfig() { singleton._saveConfig(); }
+	public static void saveConfigAs( String sNewFilePath) { singleton._saveConfigAs(sNewFilePath); }
+	public static void setConfigFilePath( String sNewFilePath ) { singleton._setConfigFilePath(sNewFilePath); }
+	public static File getConfigFile() { return singleton._getConfigFile(); }
+	public static boolean validateDataFile( String sDataFile ) { return singleton._validateDataFile(sDataFile); }
 
 }

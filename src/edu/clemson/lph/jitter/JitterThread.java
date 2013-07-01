@@ -62,8 +62,8 @@ public class JitterThread extends Thread {
 			prog.setCurrentTask("Jittering Data");
 			aData.deIdentify(prog);
 			prog.setCurrentTask("Writing Key File");
-
 			fileOut.print(aData);
+			
 			if( ConfigFile.isNAADSMRequested() ) {
 				prog.setCurrentTask("Writing NAADSM File");
 				fileOut = new OutputCSVFile( new File(sDataFile), OutputCSVFile.OutputFileType.NAADSM );
