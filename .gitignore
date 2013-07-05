@@ -13,5 +13,6 @@ lib
 *.xlsx
 *.config
 *.txt
+TestFiles/*
 
 

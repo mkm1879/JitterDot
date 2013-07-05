@@ -1,6 +1,8 @@
 package edu.clemson.lph.jitter.structs;
 
 import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -14,6 +16,7 @@ import java.util.Set;
 import edu.clemson.lph.dialogs.ProgressDialog;
 import edu.clemson.lph.jitter.JitterDot;
 import edu.clemson.lph.jitter.files.ConfigFile;
+import edu.clemson.lph.jitter.files.OutputCSVFile;
 import edu.clemson.lph.jitter.geometry.Distance;
 import edu.clemson.lph.jitter.geometry.InvalidCoordinateException;
 import edu.clemson.lph.jitter.geometry.InvalidUTMZoneException;
@@ -35,6 +38,9 @@ public class WorkingData extends ArrayList<WorkingDataRow> {
 	private int k;
 	private static final int altK = 3;
 	
+	private String sFilePath;
+	private OutputCSVFile fileError = null;
+
 	private int iSortDirection = SORT_WEST_EAST;  // More states are wider than taller.
 	private int iCurrentSort = SORT_NONE;
 	private int iNextKey = 0;
@@ -51,7 +57,9 @@ public class WorkingData extends ArrayList<WorkingDataRow> {
 	
 	private ArrayList<WorkingDataRow> aRemovedRows = new ArrayList<WorkingDataRow>();
 	
-	public WorkingData() {
+	public WorkingData( String sFilePath, OutputCSVFile fileError ) {
+		this.fileError = fileError;
+		this.sFilePath = sFilePath;
 		k = ConfigFile.getMinK();
 	}
 	
@@ -353,6 +361,12 @@ public class WorkingData extends ArrayList<WorkingDataRow> {
 	 * or really first, we have to see if there really are j nodes in each direction before 
 	 * trying to test that direction.  And if we haven't found K points at all then we add
 	 * them as in the K closest, of course.
+	 * With the profiling counters uncommented we can see the number of comparisons needed
+	 * to find the Kth closest point.  In a large, roughly square data set near the middle of 
+	 * the set, this came to almost half the points having to compare to each point.  Making
+	 * the complexity of this step O(n^2) BY FAR the slowest step for large sets.  I had
+	 * expected the major distance short circuit to save more than that.
+	 * This doesn't max out even one CPU at least when run inside Eclipse.  Odd.
 	 * @param k this is the integer confidentiality level.
 	 */
 	private void calcDKs() {
@@ -364,11 +378,20 @@ public class WorkingData extends ArrayList<WorkingDataRow> {
 		WorkingDataRow currentRow = null;
 		// Could potentially simplify things by extracting this loop, but it is a very small part of the complexity.
 		if( prog != null ) prog.setCurrentTask("Calculating DK for each point.");
-		for( int i = 0; i < iSize; i++ ) {
-			
+		long lTimeLast = System.currentTimeMillis();
+		// Used only for some profiling but incrementing a long is faster than testing to see if we need to.
+		long lRowsSeen = 0;
+		for( int i = 0; i < iSize; i++ ) {			
 			if( ( i % 100 == 0 ) && prog != null ) {
 				String sRows = String.format("%,d", i);
 				prog.setCurrentTask("Calculating DK for each point. (" + sRows + " points complete.)");
+				long lTimeNow = System.currentTimeMillis();
+				// Only spend time on IO if we are asked.
+				if( ConfigFile.isDetailedLoggingRequested() ) {
+					System.out.println( "Row " + i + "; " + (lTimeNow - lTimeLast) + " milliseconds; " + (lRowsSeen/100) + " Avg Rows seen");
+				}
+				lTimeLast = lTimeNow;
+				lRowsSeen = 0;
 			}
 			boolean bDone[] = {false,false};
 			dClosestRows = new ArrayList<WorkingDataRow>();
@@ -390,11 +413,14 @@ public class WorkingData extends ArrayList<WorkingDataRow> {
 								// Didn't short circuit backward
 								else {
 									checkNextRowDistance( currentRow, nextRow, dClosestRows, dClosest, k );
+									lRowsSeen++;
 								}
 							}
 							// Didn't have enough to test 
-							else
+							else {
 								checkNextRowDistance( currentRow, nextRow, dClosestRows, dClosest, k );
+								lRowsSeen++;
+							}
 						}
 					}
 					else 
@@ -412,18 +438,21 @@ public class WorkingData extends ArrayList<WorkingDataRow> {
 								// Didn't short circuit forward
 								else {
 									checkNextRowDistance( currentRow, nextRow, dClosestRows, dClosest, k );
+									lRowsSeen++;
 								}
 							}
 							// Didn't have enough to test
-							else
+							else {
 								checkNextRowDistance( currentRow, nextRow, dClosestRows, dClosest, k );
+								lRowsSeen++;
+							}
 						}
 					}
 					else 
 						bDone[1] = true;
 				} catch (InvalidCoordinateException e) {
 					Loggers.error("Unable to calculate dK", e);
-					removeRow("Nonsense Jitter", currentRow);
+					removeRow("Nonsense Jitter", currentRow);  
 				}
 			}
 			if( dClosest.size() >= k ) {
@@ -438,7 +467,7 @@ public class WorkingData extends ArrayList<WorkingDataRow> {
 			else {
 				Double dK = 0.0;
 				currentRow.setDK(dK);
-				Loggers.error("Not enough premises of type " + currentRow.getAnimalTypeIn() + " to get " + k + " closest " + currentRow.getAnimalType());
+				Loggers.error("Not enough premises of other types to get " + k + " closest for type " + currentRow.getAnimalTypeIn());
 				removeRow("Not enough premises of type " + currentRow.getAnimalTypeIn(), currentRow);
 			}
 			// TODO Calculate gold standard values and write test cases!
@@ -462,6 +491,10 @@ public class WorkingData extends ArrayList<WorkingDataRow> {
 		}
 		if( nextRow == null ) {
 			Loggers.error("null nextRow passed to checkRow");
+			return;
+		}
+		if( aRemovedRows.contains(nextRow) ) {
+			Loggers.error("Compare to removed row " + nextRow.getOriginalKey() );
 			return;
 		}
 		boolean bAdded = false;
@@ -497,6 +530,11 @@ public class WorkingData extends ArrayList<WorkingDataRow> {
 		deIdentify( (ProgressDialog) null );
 	}
 	
+	/**
+	 * The methods that make up this simple sequence are NOT actually loosely coupled.
+	 * Some of these fail without the previous steps having run.
+	 * @param prog Progress dialog to update as we go along.
+	 */
 	public void deIdentify( ProgressDialog prog ) {
 		this.prog = prog;
 		setSortDirection();
@@ -579,8 +617,16 @@ public class WorkingData extends ArrayList<WorkingDataRow> {
 	
 	private void addUTMCoordinates() {
 		if( prog != null ) prog.setCurrentTask("Calculating UTM Coordinates for each row");
-		int iZone = UTMProjection.getBestZone(getMedianLongitude());
-		String sHemisphere = UTMProjection.getHemisphere(getMedianLatitude());
+		Integer iZone = null;
+		String sHemisphere = null;
+		if( ConfigFile.isUTMSet() ) {
+			iZone = ConfigFile.getUTMZoneNum();
+			sHemisphere = ConfigFile.getZoneHemisphere();
+		}
+		else {
+			iZone = UTMProjection.getBestZone(getMedianLongitude());
+			sHemisphere = UTMProjection.getHemisphere(getMedianLatitude());
+		}
 		UTMProjection utm = null;
 		try {
 			utm = new UTMProjection( iZone, sHemisphere );
@@ -610,14 +656,13 @@ public class WorkingData extends ArrayList<WorkingDataRow> {
 	
 	private void removeRow( String sMsg, WorkingDataRow row ) {
 		if( !aRemovedRows.contains(row) ) {
-			JitterDot.getErrorFile().printErrorRow( sMsg, row );
+			fileError.printErrorRow( sMsg, row );
 			aRemovedRows.add(row);
 		}
 	}
 	
 	private void saveSmallGroups( ArrayList<String> aSmallGroups ) {
-		String sErrorFilePath = JitterDot.getErrorFile().getFilePath();
-		String sSmallGroupsPath = sErrorFilePath.substring(0, sErrorFilePath.indexOf("ERROR")) + "SmallGroups.txt";
+		String sSmallGroupsPath = sFilePath.substring(0, sFilePath.lastIndexOf(".")) + "SmallGroups.txt";
 		try {
 			PrintWriter pw = new PrintWriter( new FileWriter( sSmallGroupsPath ) );
 			for( String sGroup : aSmallGroups ) {

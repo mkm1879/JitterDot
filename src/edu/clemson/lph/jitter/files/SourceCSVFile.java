@@ -24,6 +24,7 @@ public class SourceCSVFile {
 	private LabeledCSVParser parser = null;
 	private String aColumns[];
 	private int iRows;
+	private OutputCSVFile fileError;
 	
 	public SourceCSVFile( File fIn ) throws FileNotFoundException, IOException {
 		fInput = fIn;
@@ -31,6 +32,10 @@ public class SourceCSVFile {
 		parser = new LabeledCSVParser( new ExcelCSVParser( new FileInputStream( fInput )));
 		aColumns = parser.getLabels();
 		WorkingData.setColumns(aColumns);
+//		String sFilePath = fIn.getPath();
+//		String sErrorPath = sFilePath.substring(0, sFilePath.lastIndexOf(".")) + "ERRORS.txt";
+//		fileError = new OutputCSVFile( new File(sErrorPath), OutputCSVFile.OutputFileType.ERROR );
+		fileError = new OutputCSVFile( fIn, OutputCSVFile.OutputFileType.ERROR );
 	}
 	
 	public static String[] getStandardColumns() {
@@ -57,7 +62,7 @@ public class SourceCSVFile {
 	 * @throws InvalidInputException For any row that lacks valid data for any required field.
 	 */
 	public WorkingData getData() throws IOException, NumberFormatException, InvalidCoordinateException, InvalidInputException {
-		WorkingData aData = new WorkingData();
+		WorkingData aData = new WorkingData( fInput.getPath(), fileError );
 		aData.setRows(iRows);
 		String aLine[] = null;
 		while( (aLine = parser.getLine()) != null ) {
@@ -138,8 +143,7 @@ public class SourceCSVFile {
 			if( dataRow == null || sOriginalKey == null || dLongitudeIn == null || dLatitudeIn == null || sAnimalType == null
 					|| ( Math.abs(dLongitudeIn) < 0.0001 && Math.abs(dLatitudeIn) < 0.0001 ) ) {
 				Loggers.getLogger().info("Row " + sOriginalKey + " could not be used ");
-				OutputCSVFile fError = JitterDot.getErrorFile();
-				fError.printErrorRow("Row missing required data", aLine);
+				fileError.printErrorRow("Row missing required data", aLine);
 				aData.setRows(--iRows);
 				continue;
 			}
@@ -165,6 +169,7 @@ public class SourceCSVFile {
 	 */
 	public void close() {
 		try {
+			fileError.close();
 			parser.close();
 		} catch (IOException e) {
 			Loggers.error(e);

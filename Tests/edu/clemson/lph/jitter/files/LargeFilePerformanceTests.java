@@ -37,10 +37,7 @@ public class LargeFilePerformanceTests {
 		File fileIn = new File( "TestFiles/HerdsPlus.csv");
 		ConfigFile.setConfigFilePath("TestFiles/JitterDotConfigTest.config");
 		OutputCSVFile fileError = null;
-		JitterDot.setErrorFile(fileError);
 		try {
-			fileError = new OutputCSVFile( fileIn, OutputCSVFile.OutputFileType.ERROR );
-			JitterDot.setErrorFile(fileError);
 			source = new SourceCSVFile( fileIn );
 			aData = source.getData();	
 			System.out.println("getData() took " + (System.currentTimeMillis() - startTime ) + " milliseconds");
@@ -70,11 +67,11 @@ public class LargeFilePerformanceTests {
 		System.out.println( "Average(distance - dK) = " + dSumDiffDistDK / (1.0 * aData.size() ) ); 
 		try {
 			startTime = System.currentTimeMillis();
-			OutputCSVFile fileOut = new OutputCSVFile( new File( "TestOutLarge.csv"), OutputCSVFile.OutputFileType.KEY );
+			OutputCSVFile fileOut = new OutputCSVFile( new File( "TestFiles/TestOutLarge.csv"), OutputCSVFile.OutputFileType.KEY );
 			fileOut.print(aData);
-			fileOut = new OutputCSVFile( new File( "TestOutLarge.csv"), OutputCSVFile.OutputFileType.NAADSM );
+			fileOut = new OutputCSVFile( new File( "TestFiles/TestOutLarge.csv"), OutputCSVFile.OutputFileType.NAADSM );
 			fileOut.print(aData);
-			fileOut = new OutputCSVFile( new File( "TestOutLarge.csv"), OutputCSVFile.OutputFileType.INTERSPREAD );
+			fileOut = new OutputCSVFile( new File( "TestFiles/TestOutLarge.csv"), OutputCSVFile.OutputFileType.INTERSPREAD );
 			fileOut.print(aData);			
 			System.out.println("print took " + (System.currentTimeMillis() - startTime ) + " milliseconds");
 			if( fileError != null ) fileError.close();

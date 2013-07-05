@@ -2,17 +2,22 @@ package edu.clemson.lph.jitter.structs;
 
 import static org.junit.Assert.*;
 
+import java.io.File;
+
 import org.junit.Before;
 import org.junit.Test;
 
+import edu.clemson.lph.jitter.files.OutputCSVFile;
 import edu.clemson.lph.jitter.geometry.InvalidCoordinateException;
 import edu.clemson.lph.jitter.structs.WorkingDataRow;
 
 public class WorkingDataRowTests {
-	private WorkingData data = new WorkingData();
+	private WorkingData data;
 	
 	@Before
 	public void setUp() throws Exception {
+		OutputCSVFile fError = new OutputCSVFile( new File("TestFiles/TestERRORS.csv"), OutputCSVFile.OutputFileType.ERROR);
+		data = new WorkingData( "TestFiles/Test.csv", fError );
 		data.setRows(100);  // this is silly just make sure we have enough keys for testing.
 		double dLat = 34.1;
 		double dLong = -81.9;

@@ -93,6 +93,9 @@ public class WorkingDataRow {
 	 */
 	public boolean similarTo( WorkingDataRow otherRow ) {
 		boolean bRet = false;
+		if( getAnimalType() == null || otherRow == null ) {
+			return false;
+		}
 		if( getAnimalType().equals(otherRow.getAnimalType()) ) 
 			bRet = true;
 		return bRet;

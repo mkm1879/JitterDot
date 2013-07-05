@@ -21,9 +21,6 @@ import edu.clemson.lph.jitter.ui.ConfigController;
 import edu.clemson.lph.jitter.ui.ConfigFrame;
 
 public class JitterDot {
-	// Global reference to single error file for content related errors, leaving Loggers for application errors and info.
-	// The Error File is meant to be user-friendly in the sense that it is formatted similarly to the original data.
-	private static OutputCSVFile fileError = null;
 	// Make args available in runnable without having to subclass Thread.
 	private static String[] args;
 
@@ -94,14 +91,6 @@ public class JitterDot {
 				Loggers.error(e);
 			}		
 		}	
-	}
-	
-	public static void setErrorFile( OutputCSVFile csvFile ) {
-		fileError = csvFile;
-	}
-	
-	public static OutputCSVFile getErrorFile() {
-		return fileError;
 	}
 	
 	public static void runJitter( String sDataFile ) {

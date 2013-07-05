@@ -57,8 +57,8 @@ public class ConfigFile {
 	/**
 	 * Block further modification for access in run thread.
 	 */
-	public void _lockConfig() {
-		bLocked = true;
+	public void _lockConfig( boolean bLocked ) {
+		this.bLocked = bLocked;
 	}
 	
 	private boolean testLock() {
@@ -230,6 +230,10 @@ public class ConfigFile {
 		_setValue("MinGroup", iMinGroup.toString(), "Jittering");
 	}
 	
+	public boolean _isUTMSet() {
+		String sValue = props.getProperty("UTMZone");
+		return ( sValue != null );
+	}
 	
 	// Currently not using user configured UTMZones but calculating from median longitude.
 	public Integer _getUTMZoneNum() {
@@ -265,6 +269,9 @@ public class ConfigFile {
 			}
 			else if( sZone.trim().endsWith("N") ) {
 				sRet = "N";
+			}
+			else {
+				Loggers.error("Cannot parse hemisphere from " + sZone + " for UTMZone" );				
 			}
 		}
 		return sRet;
@@ -525,13 +532,14 @@ public class ConfigFile {
 	public ConfigFile getConfig() { return singleton; }
 	
 	// Static methods simply call same method on Singleton instance
-	public static void lockConfig() { singleton._lockConfig(); }
+	public static void lockConfig( boolean bLocked ) { singleton._lockConfig( bLocked ); }
 	public static List<String> getStates() { return singleton._getStates(); }
 	public static void setStates( List<String> aStates ) { singleton._setStates(aStates); }
 	public static Integer getMinK() { return singleton._getMinK(); }
 	public static void setMinK( Integer iMinK ) { singleton._setMinK(iMinK); }
 	public static Integer getMinGroup() { return singleton._getMinGroup(); }
 	public static void setMinGroup( Integer iMinGroup ) { singleton._setMinGroup(iMinGroup); }
+	public static boolean isUTMSet() { return singleton._isUTMSet(); }
 	public static Integer getUTMZoneNum() { return singleton._getUTMZoneNum(); }
 	public static String getZoneHemisphere() { return singleton._getZoneHemisphere(); }
 	public static void setUTMZone( String sZone ) { singleton._setUTMZone(sZone); }

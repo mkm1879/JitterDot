@@ -99,11 +99,15 @@ public class ConfigFileTests {
 	public void testLockConfig() {
 		ConfigFile newConfig = new ConfigFile("TestFiles/JitterDotConfigTest.config");
 		assertTrue( newConfig._getMinK() == 5);
-		newConfig._lockConfig();
+		newConfig._lockConfig(true);
 		newConfig._setMinK(20);
-		// Log file and consolue should show ConcurrentModificationException
+		// Log file and console should show ConcurrentModificationException
 		assertTrue( newConfig._getMinK() == 5);
 		// Value not changed.
+		newConfig._lockConfig(false);
+		newConfig._setMinK(20);
+		assertTrue( newConfig._getMinK() == 20);
+		// Value changed.
 	}
 
 	@Test

@@ -1,6 +1,5 @@
 package edu.clemson.lph.jitter;
 
-import java.awt.Window;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -8,6 +7,9 @@ import java.lang.reflect.InvocationTargetException;
 
 import javax.swing.SwingUtilities;
 
+import org.apache.log4j.LogManager;
+
+import edu.clemson.lph.dialogs.MessageDialog;
 import edu.clemson.lph.dialogs.ProgressDialog;
 import edu.clemson.lph.jitter.files.ConfigFile;
 import edu.clemson.lph.jitter.files.InvalidInputException;
@@ -16,16 +18,17 @@ import edu.clemson.lph.jitter.files.SourceCSVFile;
 import edu.clemson.lph.jitter.geometry.InvalidCoordinateException;
 import edu.clemson.lph.jitter.logger.Loggers;
 import edu.clemson.lph.jitter.structs.WorkingData;
+import edu.clemson.lph.jitter.ui.ConfigFrame;
 
 public class JitterThread extends Thread {
-	private Window parent;
+	private ConfigFrame frame;
 	private String sDataFile;
 	private ProgressDialog prog = null;
 	
 
-	public JitterThread(Window parent, String sDataFile) {
+	public JitterThread(ConfigFrame parent, String sDataFile) {
 		super("RunJitter");
-		this.parent = parent;
+		this.frame = parent;
 		this.sDataFile = sDataFile;
 	}
 	
@@ -33,37 +36,41 @@ public class JitterThread extends Thread {
 	 * Sets up ProgressDialog and then starts thread.
 	 */
 	public void runJitter() {
-		prog = new ProgressDialog(parent, "JitterDot: Progress", "Running De-identification");
+		prog = new ProgressDialog(frame, "JitterDot: Progress", "Running De-identification");
 		prog.setAuto(true);
 		prog.setVisible(true);
 		// Do not allow concurrent access to mutator functions in ConfigFile during 
 		// the actual deidentification run.
-		ConfigFile.lockConfig();
+		ConfigFile.lockConfig( true );
 		this.start();
 	}
 	
 	@Override
 	public void run() {
 		long lStartTime = System.currentTimeMillis();
-		
+		long lRows = -1;
 		// TODO Move this to secondary thread, add method for canceling?, add ProgressDialog and updates, fix error output now going to loggers
 		SourceCSVFile source = null;
 		try {
 			prog.setCurrentTask("Reading source data");
-			OutputCSVFile fileError = null;
 			File fIn = new File( sDataFile );
 			source = new SourceCSVFile( fIn );
-			// Set the global ErrorOutput file.  Is this the right way of handling this?  Comparable to Loggers.
-			fileError = new OutputCSVFile( new File(sDataFile), OutputCSVFile.OutputFileType.ERROR );
-			JitterDot.setErrorFile(fileError);
 			OutputCSVFile fileOut = null;
-			fileOut = new OutputCSVFile( new File(sDataFile), OutputCSVFile.OutputFileType.KEY );
 			WorkingData aData = source.getData();
+			if( aData == null ) {
+				MessageDialog.messageLater(frame, "JitterDot Error", "Failed to read data file. See log file for reason, possibly out of memory.");
+				return; // via finally to clean up
+			}
+			lRows = aData.size();
+			if( lRows == 0 ) {
+				Loggers.error("Empty Data File: " + sDataFile);
+				return;  // return via finally block.
+			}
+			fileOut = new OutputCSVFile( new File(sDataFile), OutputCSVFile.OutputFileType.KEY );
 			prog.setCurrentTask("Jittering Data");
 			aData.deIdentify(prog);
 			prog.setCurrentTask("Writing Key File");
-			fileOut.print(aData);
-			
+			fileOut.print(aData);		
 			if( ConfigFile.isNAADSMRequested() ) {
 				prog.setCurrentTask("Writing NAADSM File");
 				fileOut = new OutputCSVFile( new File(sDataFile), OutputCSVFile.OutputFileType.NAADSM );
@@ -74,8 +81,9 @@ public class JitterThread extends Thread {
 				fileOut = new OutputCSVFile( new File(sDataFile), OutputCSVFile.OutputFileType.INTERSPREAD );
 				fileOut.print(aData);
 			}
-			fileError.close();
 			prog.setCurrentTask("Closing");
+			// Also closes the error file it tracks.
+			source.close();
 
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
@@ -92,20 +100,37 @@ public class JitterThread extends Thread {
 		} catch (InvalidInputException e) {
 			e.printStackTrace();
 			Loggers.error(e);
+		} catch( OutOfMemoryError ee ) {
+			MessageDialog.messageLater(frame, "JitterDot Error", "Out of memory reading dataset");
+			Loggers.error("Ran out of memory reading data.  Add memory or use smaller dataset.");
+//			LogManager.shutdown();
 		}
-		long lEndTime = System.currentTimeMillis();
-		Loggers.getLogger().info( "Run took " + Double.toString((lEndTime - lStartTime)/1000.0) + " seconds" );
-		try {
-			SwingUtilities.invokeAndWait(new Runnable() {
-				@Override
-				public void run() {
-					prog.setVisible(false);
-				}
-			});
-		} catch (InvocationTargetException e) {
-			Loggers.error(e);
-		} catch (InterruptedException e) {
-			Loggers.error(e);
+		finally {
+			if( lRows > 0 ) {
+				long lEndTime = System.currentTimeMillis();
+				Loggers.getLogger().info( "Run of " + lRows + " rows took "+ Double.toString((lEndTime - lStartTime)/1000.0) + " seconds" );
+				System.out.println( "Run of " + lRows + " rows took "+ Double.toString((lEndTime - lStartTime)/1000.0) + " seconds" );
+			}
+			try {
+				SwingUtilities.invokeAndWait(new Runnable() {
+					@Override
+					public void run() {
+						prog.setVisible(false);
+						if( frame != null ) {
+							frame.setEditEnabled(true);
+							ConfigFile.lockConfig(false);
+						}
+						else {
+							// We are running from command line so just exit
+							System.exit(0);
+						}
+					}
+				});
+			} catch (InvocationTargetException e) {
+				Loggers.error(e);
+			} catch (InterruptedException e) {
+				Loggers.error(e);
+			}
 		}
 	}
 

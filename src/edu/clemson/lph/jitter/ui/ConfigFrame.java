@@ -60,6 +60,10 @@ public class ConfigFrame extends JFrame {
 
 	private JMenuItem mntmRun;
 
+	private JMenuItem mntmOpen;
+
+	private JMenuItem mntmOpenConfigFile;
+
 	/**
 	 * Launch the application.
 	 */
@@ -99,7 +103,7 @@ public class ConfigFrame extends JFrame {
 		JMenu mnFile = new JMenu("File");
 		menuBar.add(mnFile);
 		
-		JMenuItem mntmOpen = new JMenuItem("Open Data File");
+		mntmOpen = new JMenuItem("Open Data File");
 		mnFile.add(mntmOpen);
 		mntmOpen.addActionListener(new ActionListener() {
 			@Override
@@ -115,7 +119,7 @@ public class ConfigFrame extends JFrame {
 			}
 		});
 		
-		JMenuItem mntmOpenConfigFile = new JMenuItem("Open Config File");
+		mntmOpenConfigFile = new JMenuItem("Open Config File");
 		mnFile.add(mntmOpenConfigFile);
 		mntmOpenConfigFile.addActionListener(new ActionListener() {
 			@Override
@@ -408,5 +412,17 @@ public class ConfigFrame extends JFrame {
 	
 	public void setRunEnabled( boolean bRunEnabled ) {
 		mntmRun.setEnabled(bRunEnabled);		
+	}
+	
+	public void setEditEnabled( boolean bEditEnabled ) {
+		lbStates.setEnabled(bEditEnabled);
+		ckDetailedLogging.setEnabled(bEditEnabled);
+		spinMinK.setEnabled(bEditEnabled);
+		spinMinGroup.setEnabled(bEditEnabled);
+		ckNaadsm.setEnabled(bEditEnabled);
+		ckInterspreadPlus.setEnabled(bEditEnabled);
+		mntmOpen.setEnabled(bEditEnabled);
+		mntmOpenConfigFile.setEnabled(bEditEnabled);
+		tblDataFileLayout.setEnabled(bEditEnabled);
 	}
 }

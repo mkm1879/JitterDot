@@ -140,7 +140,9 @@ public class ConfigController implements TableModelListener, ActionListener {
 			MessageDialog.messageLater(frame, "JitterDot: Error", "No Output Requested");
 			return;
 		}
+		saveConfig();
 		JitterThread thread = new JitterThread( frame, sDataFile );
+		frame.setEditEnabled(false);
 		thread.runJitter();
 		
 	}

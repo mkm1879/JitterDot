@@ -37,6 +37,7 @@ public class DataFileLayoutModel extends AbstractTableModel {
 	 */
 	public void setDataFile( File fData ) throws IOException {
 		this.fData = fData;
+		aData.clear();
 		parser = new LabeledCSVParser( new ExcelCSVParser( new FileInputStream( fData )));
 		aColumns = parser.getLabels();
 		ArrayList<String> aRow = new ArrayList<String>();
@@ -127,11 +128,11 @@ public class DataFileLayoutModel extends AbstractTableModel {
 	@Override
 	public String getColumnName( int columnIndex ) {
 		if( aColumns == null ) {
-			Loggers.error("getColumnName called before Data File Loaded");
+			Loggers.error(new Exception("getColumnName called before Data File Loaded"));
 			return null;
 		}
 		if( columnIndex < 0 || columnIndex >= aColumns.length ) {
-			Loggers.error("Invalid columnIndex " + columnIndex);
+			Loggers.error(new Exception("Invalid columnIndex " + columnIndex));
 			return null;
 		}
 		return aColumns[columnIndex];
