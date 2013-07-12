@@ -33,6 +33,9 @@ public class JitterDot {
 			public void run() {
 			    try {
 			        UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+			        if( UIManager.getSystemLookAndFeelClassName().contains("Aqua") ) {
+			        	setUIFontSizeChange( -2 );
+			        }
 			    } catch (Exception e) {
 			        Loggers.error( "Error setting look and feel\n" + e.getMessage() );
 			    }
@@ -96,6 +99,30 @@ public class JitterDot {
 	public static void runJitter( String sDataFile ) {
 		JitterThread thread = new JitterThread( null, sDataFile );
 		thread.runJitter();
+	}
+	
+	/**
+	 * Adjust the size on some OS's to fit.  Mac OS X needs smaller.
+	 * @param iDelta
+	 */
+	private static void setUIFontSizeChange( int iDelta )
+	{
+	    java.util.Enumeration<Object> keys = UIManager.getDefaults().keys();
+	    while (keys.hasMoreElements())
+	    {
+	        Object key = keys.nextElement();
+	        Object value = UIManager.get(key);
+	        if (value instanceof javax.swing.plaf.FontUIResource)
+	        {
+	        	javax.swing.plaf.FontUIResource f = (javax.swing.plaf.FontUIResource)value;
+	        	String sName = f.getName();
+	        	int iStyle = f.getStyle();
+	        	int iSize = f.getSize();
+	        	iSize += iDelta;
+	        	javax.swing.plaf.FontUIResource f1 = new javax.swing.plaf.FontUIResource(sName, iStyle, iSize);
+	            UIManager.put(key, f1);
+	        }
+	    }
 	}
 
 }

@@ -20,7 +20,7 @@ public class Distance {
 			throw new InvalidCoordinateException( "null Longitude 1" );
 		}
 		if(dLong1Degrees < -180.0 || dLong1Degrees > 180.0 ) {
-			throw new InvalidCoordinateException( dLat1Degrees, "Longitude 1" );
+			throw new InvalidCoordinateException( dLong1Degrees, "Longitude 1" );
 		}
 		if( dLat2Degrees == null ) {
 			throw new InvalidCoordinateException( "null Latitude 2" );
@@ -32,7 +32,7 @@ public class Distance {
 			throw new InvalidCoordinateException( "null Longitude 2" );
 		}
 		if( dLong2Degrees < -180.0 || dLong2Degrees > 180.0 ) {
-			throw new InvalidCoordinateException( dLat2Degrees, "Longitude 2" );
+			throw new InvalidCoordinateException( dLong2Degrees, "Longitude 2" );
 		}
 
 		if( dLat1Degrees == dLat2Degrees && dLong1Degrees == dLong2Degrees )

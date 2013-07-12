@@ -1,12 +1,15 @@
 package edu.clemson.lph.jitter.geometry;
 
 import java.util.HashMap;
+import java.util.List;
 
 import org.osgeo.proj4j.CRSFactory;
 import org.osgeo.proj4j.CoordinateReferenceSystem;
 import org.osgeo.proj4j.CoordinateTransform;
 import org.osgeo.proj4j.CoordinateTransformFactory;
 import org.osgeo.proj4j.ProjCoordinate;
+
+import edu.clemson.lph.jitter.files.ConfigFile;
 
 /**
  * This is a very thin wrapper around the Proj4j library to make it consistent with 
@@ -36,6 +39,7 @@ public class UTMProjection {
 	CoordinateReferenceSystem WGS84 = null;
 	CoordinateReferenceSystem tgtCRS = null;
 	CoordinateTransform trans = null;
+	CoordinateTransform revtrans = null;
 	
 	/**
 	 * Initialize zoneMap with central meridians.
@@ -74,12 +78,14 @@ public class UTMProjection {
 		String sEPSG = zoneToUTM_EPSG( iZone, sHemisphere );
 		tgtCRS = createCRS( sEPSG );
 		trans = ctFactory.createTransform(WGS84, tgtCRS);
+		revtrans = ctFactory.createTransform(tgtCRS, WGS84);
 	}
 	
 	public void setUTMZone( int iZone, String sHemisphere ) throws InvalidUTMZoneException {
 		String sEPSG = zoneToUTM_EPSG( iZone, sHemisphere );
 		tgtCRS = createCRS( sEPSG );
 		trans = ctFactory.createTransform(WGS84, tgtCRS);		
+		revtrans = ctFactory.createTransform(tgtCRS, WGS84);
 	}
 	
 	public double getCentralMeridianDegrees() {
@@ -117,7 +123,6 @@ public class UTMProjection {
 		}
 		Double[] aCoords = new Double[2];
 		Double x, y;
-		// TODO Implement Proj4j calls as needed
 		ProjCoordinate p = new ProjCoordinate();
 		p.x = dLongDegrees;
 		p.y = dLatDegrees;
@@ -132,8 +137,27 @@ public class UTMProjection {
 		return aCoords;
 	}
 	
+	public Double[] deProject( Double dNorthing, Double dEasting ) throws InvalidCoordinateException {
+		Double[] aCoords = new Double[2];
+		Double dLong, dLat;
+		
+		ProjCoordinate p = new ProjCoordinate();
+		p.x = dEasting;
+		p.y = dNorthing;
+
+  		ProjCoordinate pout = new ProjCoordinate();
+  		revtrans.transform(p, pout);
+  		dLong = pout.x;
+  		dLat = pout.y;
+		aCoords[0] = dLong;
+		aCoords[1] = dLat;
+
+		return aCoords;
+	}
+	
 	private String zoneToUTM_EPSG( int iZone, String sHemisphere ) throws InvalidUTMZoneException {
-		if( iZone < 1 || iZone > 22 ) {
+		List<String> aStates = ConfigFile.getStates();
+		if( iZone < 1 || ( aStates.size() > 0 && aStates.get(0).trim().length() > 0 && iZone > 22 ) || iZone > 60 ) {
 			throw new InvalidUTMZoneException( iZone, "iZone" );
 		}
 		else {

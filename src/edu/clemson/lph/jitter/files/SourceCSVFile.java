@@ -12,14 +12,15 @@ import com.Ostermiller.util.*;
 import edu.clemson.lph.controls.GPSTextField;
 import edu.clemson.lph.jitter.JitterDot;
 import edu.clemson.lph.jitter.geometry.InvalidCoordinateException;
+import edu.clemson.lph.jitter.geometry.InvalidUTMZoneException;
 import edu.clemson.lph.jitter.logger.Loggers;
 import edu.clemson.lph.jitter.structs.ColumnNameMap;
 import edu.clemson.lph.jitter.structs.WorkingData;
 import edu.clemson.lph.jitter.structs.WorkingDataRow;
 
 public class SourceCSVFile {
-	private static final String[] STANDARD_COLUMNS = {	"OriginalKey","Animals","Houses","AnimalType","Integrator","Longitude","Latitude","Status","DaysInState","DaysLeftInState"};
-	private static final String[] ESSENTIAL_COLUMNS = {	"OriginalKey","Animals","AnimalType","Longitude","Latitude"};
+	private static final String[] STANDARD_COLUMNS = {	"OriginalKey","Animals","Houses","AnimalType","Integrator","Longitude","Latitude","Northing","Easting","Status","DaysInState","DaysLeftInState"};
+	private static final String[] ESSENTIAL_COLUMNS = {	"OriginalKey","Animals","AnimalType" };
 	private File fInput = null;
 	private LabeledCSVParser parser = null;
 	private String aColumns[];
@@ -70,6 +71,8 @@ public class SourceCSVFile {
 			String sOriginalKey = null;
 			Double dLatitudeIn = null;
 			Double dLongitudeIn = null;
+			Double dNorthingIn = null;
+			Double dEastingIn = null;
 			String sAnimalType = null;
 			String sIntegrator = null;
 			int iHouses = -1;
@@ -117,6 +120,16 @@ public class SourceCSVFile {
 						dLatitudeIn = Double.parseDouble(sLatitude);	
 					}
 				}
+				else if( ConfigFile.mapColumn("Northing").equalsIgnoreCase(sColName) ) {
+					if( sValue != null && sValue.trim().length() > 0 && !"NULL".equalsIgnoreCase(sValue) ) {
+						dNorthingIn = Double.parseDouble(sValue);	
+					}
+				}
+				else if( ConfigFile.mapColumn("Easting").equalsIgnoreCase(sColName) ) {
+					if( sValue != null && sValue.trim().length() > 0 && !"NULL".equalsIgnoreCase(sValue) ) {
+						dEastingIn = Double.parseDouble(sValue);	
+					}
+				}
 				else if( ConfigFile.mapColumn("Status").equalsIgnoreCase(sColName) ) {
 					sStatus = sValue;
 				}
@@ -136,14 +149,46 @@ public class SourceCSVFile {
 				}
 			}
 			try {
-				dataRow = new WorkingDataRow( aLine, sOriginalKey, dLatitudeIn, dLongitudeIn, sAnimalType );
+				if( dLatitudeIn != null && dLongitudeIn != null )
+					dataRow = new WorkingDataRow( aLine, sOriginalKey, dLatitudeIn, dLongitudeIn, sAnimalType );
+				else if ( dNorthingIn != null && dEastingIn != null && ConfigFile.getUTMZoneNum() != null )
+					dataRow = new WorkingDataRow( aLine, sOriginalKey, dNorthingIn, dEastingIn, ConfigFile.getUTMZone(), sAnimalType );
+				else {
+					Loggers.getLogger().info("Row " + sOriginalKey + " could not be used. Missing Coordinates");
+					fileError.printErrorRow("Row has no coordinates", aLine);
+					aData.setRows(--iRows);
+					continue;
+				}
+				if( sOriginalKey == null ) {
+					Loggers.getLogger().info("Row could not be used. Missing Original Key");
+					fileError.printErrorRow("Row missing Original Key", aLine);
+					aData.setRows(--iRows);
+					continue;
+				}
+				if( sAnimalType == null ) {
+					Loggers.getLogger().info("Row " + sOriginalKey + " could not be used. Missing Animal Type");
+					fileError.printErrorRow("Row missing Animal Type", aLine);
+					aData.setRows(--iRows);
+					continue;
+				}
+					
 			} catch( InvalidCoordinateException e ) {
-				dataRow = null;
-			}
-			if( dataRow == null || sOriginalKey == null || dLongitudeIn == null || dLatitudeIn == null || sAnimalType == null
-					|| ( Math.abs(dLongitudeIn) < 0.0001 && Math.abs(dLatitudeIn) < 0.0001 ) ) {
-				Loggers.getLogger().info("Row " + sOriginalKey + " could not be used ");
-				fileError.printErrorRow("Row missing required data", aLine);
+				String sCoordinates = null;
+				if( dLatitudeIn != null && dLongitudeIn != null )
+					sCoordinates = dLatitudeIn.toString() + ", " + dLongitudeIn.toString();
+				else if ( dNorthingIn != null && dEastingIn != null )
+					sCoordinates = dEastingIn.toString() + ", " + dNorthingIn.toString() + ", " + ConfigFile.getUTMZoneNum();
+				else
+					sCoordinates = "No coordinates";
+				Loggers.getLogger().info("Row " + sOriginalKey + " could not be used. Invalid Coordinates " + sCoordinates
+						+ ": " + e.getMessage() );
+				fileError.printErrorRow("Row missing or bad coordinates", aLine);
+				aData.setRows(--iRows);		
+				continue;
+			} catch (InvalidUTMZoneException e) {
+				Loggers.getLogger().info("Row " + sOriginalKey + " could not be used. Bad UTMZone " +  ConfigFile.getUTMZoneNum()
+						+ ": " + e.getMessage() );
+				fileError.printErrorRow("Row had bad UTM Zone", aLine);
 				aData.setRows(--iRows);
 				continue;
 			}
@@ -163,6 +208,7 @@ public class SourceCSVFile {
 		}
 		return aData;
 	}
+
 	
 	/**
 	 * Close the underlying file and flush data.

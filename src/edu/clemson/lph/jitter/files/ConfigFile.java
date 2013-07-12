@@ -235,6 +235,10 @@ public class ConfigFile {
 		return ( sValue != null );
 	}
 	
+	public String _getUTMZone() {
+		return getString("UTMZone");
+	}
+	
 	// Currently not using user configured UTMZones but calculating from median longitude.
 	public Integer _getUTMZoneNum() {
 		Integer iRet = null;
@@ -310,6 +314,19 @@ public class ConfigFile {
 			sRequested = "False";
 		_setValue("InterspreadPlus", sRequested, "Output");
 	}
+	
+	/**
+	 * Clear a list of field mappings by setting their values to null
+	 * Used to remove mappings to fields that do not exist in new data file
+	 * when opened.  We don't want to lose any that do match but 
+	 * have no GUI option to remove those without a column to display in.
+	 * @param aFields
+	 */
+	public void _clearFieldMappings( List<String> aFields ) {
+		for( String sField : aFields ) {
+			_setValue( sField, null, "Field Mappings");		
+		}
+	}
 
 	/**
 	 * Convenience method for setting field mappings.
@@ -368,7 +385,10 @@ public class ConfigFile {
 		initWrite();
 		
 		String sOldMap = props.getProperty(sProp);
-		props.put(sProp, sValue);
+		if( sValue != null )
+			props.put(sProp, sValue);
+		else
+			props.remove(sProp);
 		if( sOldMap != null ) {
 			if( sOldMap.equals(sValue) )
 				return;
@@ -377,12 +397,13 @@ public class ConfigFile {
 					String sLine = lines.get(i);
 					if( sLine.startsWith(sProp + "=") ) {
 						lines.remove(i);
-						lines.add(i, sProp + "=" + sValue);
+						if( sValue != null )
+							lines.add(i, sProp + "=" + sValue);
 					}
 				}
 			}
 		}
-		else {
+		else if( sValue != null ) {
 			boolean bSection = false;
 			for( int i = 0; i < lines.size(); i++ ) {
 				String sLine = lines.get(i);
@@ -398,6 +419,7 @@ public class ConfigFile {
 				_setValue( sProp, sValue, sSection);
 			}
 		}
+		// else doesn't exist and setting to null so do nothing.
 	}
 	
 	private void makeSection( String sSection ) {
@@ -540,6 +562,7 @@ public class ConfigFile {
 	public static Integer getMinGroup() { return singleton._getMinGroup(); }
 	public static void setMinGroup( Integer iMinGroup ) { singleton._setMinGroup(iMinGroup); }
 	public static boolean isUTMSet() { return singleton._isUTMSet(); }
+	public static String getUTMZone() { return singleton._getUTMZone(); }
 	public static Integer getUTMZoneNum() { return singleton._getUTMZoneNum(); }
 	public static String getZoneHemisphere() { return singleton._getZoneHemisphere(); }
 	public static void setUTMZone( String sZone ) { singleton._setUTMZone(sZone); }
@@ -547,6 +570,7 @@ public class ConfigFile {
 	public static void setNAADSMRequested( boolean bNAADSM ) { singleton._setNAADSMRequested(bNAADSM); }
 	public static boolean isInterspreadRequested() { return singleton._isInterspreadRequested(); }
 	public static void setInterspreadRequested( boolean bInterspread ) { singleton._setInterspreadRequested(bInterspread); }
+	public static void clearFieldMappings( List<String> aFields ) { singleton._clearFieldMappings( aFields ); }
 	public static void setFieldMap( String sField, String sMappedTo ) { singleton._setFieldMap(sField, sMappedTo); }
 	public static String mapColumn( String sColumnOut ) { return singleton._mapColumn(sColumnOut); }
 	public static boolean isDetailedLoggingRequested() { return singleton._isDetailedLoggingRequested(); }

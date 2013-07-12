@@ -19,6 +19,7 @@ import java.beans.Beans;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -43,6 +44,9 @@ import javax.swing.JSpinner;
 import javax.swing.SpinnerNumberModel;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import javax.swing.SwingConstants;
+import java.awt.FlowLayout;
+import javax.swing.JTextField;
 
 @SuppressWarnings("serial")
 public class ConfigFrame extends JFrame {
@@ -63,6 +67,7 @@ public class ConfigFrame extends JFrame {
 	private JMenuItem mntmOpen;
 
 	private JMenuItem mntmOpenConfigFile;
+	private JTextField jtfUTMZone;
 
 	/**
 	 * Launch the application.
@@ -228,27 +233,40 @@ public class ConfigFrame extends JFrame {
 		ckInterspreadPlus.addActionListener(control);
 		pOutput.add(ckInterspreadPlus);
 		
+		JPanel panel = new JPanel();
+		pDetails.add(panel);
+		panel.setLayout(new GridLayout(0, 1, 0, 0));
+		
 		JPanel pJitter = new JPanel();
-		pDetails.add(pJitter);
-		pJitter.setLayout(null);
+		panel.add(pJitter);
+		pJitter.setLayout(new FlowLayout(FlowLayout.CENTER, 5, 5));
 		
 		JLabel lblKminimumAnonymity = new JLabel("K (Minimum Anonymity):");
-		lblKminimumAnonymity.setBounds(23, 7, 115, 14);
+		lblKminimumAnonymity.setHorizontalAlignment(SwingConstants.TRAILING);
 		pJitter.add(lblKminimumAnonymity);
 		
 		spinMinK = new JSpinner();
-		spinMinK.setBounds(143, 5, 38, 18);
 		spinMinK.setModel(new SpinnerNumberModel(new Integer(5), new Integer(1), null, new Integer(1)));
 		pJitter.add(spinMinK);
 		
 		JLabel lblMinimumGroup = new JLabel("Minimum Group:");
-		lblMinimumGroup.setBounds(201, 7, 76, 14);
+		lblMinimumGroup.setHorizontalAlignment(SwingConstants.TRAILING);
 		pJitter.add(lblMinimumGroup);
 		
 		spinMinGroup = new JSpinner();
-		spinMinGroup.setBounds(281, 5, 38, 18);
 		spinMinGroup.setModel(new SpinnerNumberModel(new Integer(5), new Integer(1), null, new Integer(1)));
 		pJitter.add(spinMinGroup);
+		
+		JPanel panel_1 = new JPanel();
+		panel.add(panel_1);
+		
+		JLabel lblUtmZone = new JLabel("UTM Zone:");
+		panel_1.add(lblUtmZone);
+		
+		jtfUTMZone = new JTextField();
+		panel_1.add(jtfUTMZone);
+		jtfUTMZone.addFocusListener(control);
+		jtfUTMZone.setColumns(10);
 		
 		JPanel pBottom = new JPanel();
 		pBottom.setBorder(new EmptyBorder(0, 30, 0, 0));
@@ -256,7 +274,8 @@ public class ConfigFrame extends JFrame {
 		pBottom.setLayout(new BorderLayout(0, 0));
 		
 		lblWarnings = new JTextArea("No Output Requested\nColumn Mapping Incomplete");
-		lblWarnings.setBackground(SystemColor.inactiveCaptionBorder);
+		Color bg = pDetails.getBackground();
+		lblWarnings.setBackground(bg);
 		lblWarnings.setLineWrap(true);
 		lblWarnings.setWrapStyleWord(true);
 		lblWarnings.setForeground(Color.RED);
@@ -309,8 +328,17 @@ public class ConfigFrame extends JFrame {
 	
 	// Getters and Setters for settings on form
 	
+	@SuppressWarnings("deprecation")
 	public List<String> getStates() {
-		return lbStates.getSelectedValuesList();
+		// As of Java 1.7 getSelectedValues() replaced by List<T> getSelectedValueList()
+		// As of now we are trying to support 1.6 
+//		return lbStates.getSelectedValuesList();
+		Object[] aStates = lbStates.getSelectedValues();
+		List<String> lStates = new ArrayList<String>();
+		for( Object oState : aStates )
+			if( oState instanceof String)
+			lStates.add((String)oState);
+		return lStates;
 	}
 	
 	public void setStates( List<String> states ) {
@@ -343,6 +371,17 @@ public class ConfigFrame extends JFrame {
 	
 	public Integer getMinK() {
 		return (Integer)spinMinK.getValue();
+	}
+	
+	public void setUTMZone( String sUTMZone ) {
+		jtfUTMZone.setText(sUTMZone);
+	}
+	
+	public String getUTMZone() {
+		String sRet = jtfUTMZone.getText();
+		if( sRet != null && sRet.trim().length() ==  0 )
+			sRet = null;
+		return sRet;
 	}
 	
 	public void setMinGroup( Integer iGroup ) {

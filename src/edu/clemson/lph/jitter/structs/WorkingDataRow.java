@@ -1,7 +1,10 @@
 package edu.clemson.lph.jitter.structs;
 
 import edu.clemson.lph.controls.GPSTextField;
+import edu.clemson.lph.jitter.files.ConfigFile;
 import edu.clemson.lph.jitter.geometry.InvalidCoordinateException;
+import edu.clemson.lph.jitter.geometry.InvalidUTMZoneException;
+import edu.clemson.lph.jitter.geometry.UTMProjection;
 
 
 /**
@@ -42,7 +45,9 @@ public class WorkingDataRow {
 	private Double dEasting = null;
 	private Double dNorthing = null;
 	private Integer iUTMZone = null;
-	private String sHemisphere = null;;
+	private String sHemisphere = null;
+	
+	private static UTMProjection proj = null;
 	
 	
 	/**
@@ -70,6 +75,34 @@ public class WorkingDataRow {
 		this.dLongitudeIn = dLongitude;
 		this.sAnimalTypeIn = sAnimalTypeIn;
 	}
+	
+	/**
+	 * Constructor with just the essential columns.  Use setters to provide other columns.
+	 * @param sOriginalKey
+	 * @param dNorthing
+	 * @param dEasting
+	 * @param sUTMZone Not actually used.  Here to differentiate from Lat/Long constructor.
+	 * @param sAnimalType
+	 * @exception InvalidCoordinateException caught in SourceCSVFile.getData and used to add row to the Errors file.
+	 * @throws InvalidUTMZoneException 
+	 */
+	public WorkingDataRow( String[] aLine, String sOriginalKey, Double dNorthing, Double dEasting, String sUTMZone, String sAnimalTypeIn ) throws InvalidCoordinateException, InvalidUTMZoneException {
+		this.aLine = aLine;
+		if( dNorthing == null )
+			throw new InvalidCoordinateException("null Northing");		
+		if( dEasting == null )
+			throw new InvalidCoordinateException("null Easting");	
+		if( proj == null )
+			proj = new UTMProjection( ConfigFile.getUTMZoneNum(), ConfigFile.getZoneHemisphere() );
+		this.sOriginalKey = sOriginalKey;
+		Double[] dCoords = proj.deProject(dNorthing, dEasting);
+		this.dLatitudeIn = dCoords[1];
+		this.dLongitudeIn = dCoords[0];
+		this.sAnimalTypeIn = sAnimalTypeIn;
+	}
+	
+	
+
 	
 	/**
 	 * @param otherData is another instance of WorkingData

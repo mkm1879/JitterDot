@@ -1,8 +1,5 @@
 package edu.clemson.lph.jitter.structs;
 
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -14,7 +11,6 @@ import java.util.List;
 import java.util.Set;
 
 import edu.clemson.lph.dialogs.ProgressDialog;
-import edu.clemson.lph.jitter.JitterDot;
 import edu.clemson.lph.jitter.files.ConfigFile;
 import edu.clemson.lph.jitter.files.OutputCSVFile;
 import edu.clemson.lph.jitter.geometry.Distance;
@@ -36,12 +32,11 @@ public class WorkingData extends ArrayList<WorkingDataRow> {
 	public static String[] aColumns;
 
 	private int k;
-	private static final int altK = 3;
 	
 	private String sFilePath;
 	private OutputCSVFile fileError = null;
 
-	private int iSortDirection = SORT_WEST_EAST;  // More states are wider than taller.
+	private int iSortDirection = SORT_WEST_EAST;  // More states are wider than tall.
 	private int iCurrentSort = SORT_NONE;
 	private int iNextKey = 0;
 	private ArrayList<Integer> randInts;
@@ -335,7 +330,6 @@ public class WorkingData extends ArrayList<WorkingDataRow> {
 		}
 		for( WorkingDataRow row : this ) {
 			if( bounds != null ) {
-				// Why did I have to hack this????
 				if( row.getLongitudeIn() < bounds.getMinLong() || row.getLongitudeIn() > bounds.getMaxLong() ||
 						 row.getLatitudeIn() < bounds.getMinLat() || row.getLatitudeIn() > bounds.getMaxLat() ) {
 					Loggers.error( "Coordinate outside state bounds (" + row.getLongitudeIn() + ", " + row.getLatitudeIn() + " in row " + row.getOriginalKey() );
@@ -459,7 +453,7 @@ public class WorkingData extends ArrayList<WorkingDataRow> {
 				Double dK = dClosest.get(k-1);
 				currentRow.setDK(dK);
 			}
-			else if ( dClosest != null && dClosest.size() > altK - 1 && currentRow.getAnimalType().equals("Other") ) {
+			else if ( dClosest != null && dClosest.size() >= k && currentRow.getAnimalType().equals("Other") ) {
 				Double dK =  dClosest.get(dClosest.size()-1);
 				currentRow.setDK(dK);
 				Loggers.getLogger().info(currentRow.getAnimalTypeIn() + " animal type using " + dClosest.size() + " closest 'Other' premises.");

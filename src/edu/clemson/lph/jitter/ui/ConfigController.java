@@ -2,6 +2,8 @@ package edu.clemson.lph.jitter.ui;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.FocusEvent;
+import java.awt.event.FocusListener;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -16,9 +18,8 @@ import edu.clemson.lph.jitter.files.ConfigFile;
 import edu.clemson.lph.jitter.files.SourceCSVFile;
 import edu.clemson.lph.jitter.logger.Loggers;
 
-public class ConfigController implements TableModelListener, ActionListener {
+public class ConfigController implements TableModelListener, ActionListener, FocusListener {
 	private ConfigFrame frame;
-	private boolean bMapComplete = false;
 	private String sDataFile;
 	private DataFileLayoutModel model;
 
@@ -42,20 +43,24 @@ public class ConfigController implements TableModelListener, ActionListener {
 		frame.setInterspreadPlusRequested( ConfigFile.isInterspreadRequested() );
 		frame.setMinK( ConfigFile.getMinK());
 		frame.setMinGroup(ConfigFile.getMinGroup());
+		frame.setUTMZone(ConfigFile.getUTMZone());
 		// This is tortured logic.  Send the logic to Gitmo.
 		DataFileLayoutModel model = (DataFileLayoutModel)frame.getTable().getModel();
-		// For every key that ConfigFile knows about
-		for( String sKey : ConfigFile.listMapKeys() ) {
-			// Find the mapping for that key.  Default is the key itself.
-			String sMap = ConfigFile.mapColumn(sKey);
-			// For every column in the data file
-			for( int i = 0; i < model.getColumnCount(); i++ ) {
-				// Read its header.  Row 1 rather than 0 because our model puts the map in 0
-				String sHeader = (String)model.getValueAt(1,  i);
-				// Assuming there is a value in the header and it matches the mapped value
-				if( sHeader != null && sHeader.equals(sMap)) {
-					// Fill in the drop down combo box with the standard column name for output.
-					model.setValueAt(sKey, 0, i);
+		if( model.getDataFile() != null ) {
+			// For every column key that SourceCSVFile knows about
+			// Not just ones in Config File
+			for( String sKey : SourceCSVFile.getStandardColumns() ) {
+				// Find the mapping for that key.  Default is the key itself.
+				String sMap = ConfigFile.mapColumn(sKey);
+				// For every column in the data file
+				for( int i = 0; i < model.getColumnCount(); i++ ) {
+					// Read its header.  Row 1 rather than 0 because our model puts the map in 0
+					String sHeader = (String)model.getValueAt(1,  i);
+					// Assuming there is a value in the header and it matches the mapped value
+					if( sHeader != null && sHeader.toLowerCase().equals(sMap.toLowerCase())) {
+						// Fill in the drop down combo box with the standard column name for output.
+						model.setValueAt(sKey, 0, i);
+					}
 				}
 			}
 		}
@@ -83,10 +88,29 @@ public class ConfigController implements TableModelListener, ActionListener {
 		try {
 			model.setDataFile(fData);
 			frame.setLayoutTableModel(model);
+			clearOldMappings();
 			loadConfig();
 		} catch (IOException e) {
 			Loggers.error(e);
 		}
+	}
+	
+	private void clearOldMappings() {
+		List<String> aFields = ConfigFile.listMapKeys();
+		for( String sKey : ConfigFile.listMapKeys() ) {
+			// Find the mapping for that key.  Default is the key itself.
+			String sMap = ConfigFile.mapColumn(sKey);
+			// For every column in the data file
+			for( int i = 0; i < model.getColumnCount(); i++ ) {
+				// Read its header.  Row 1 rather than 0 because our model puts the map in 0
+				String sHeader = (String)model.getValueAt(1,  i);
+				// Assuming there is a value in the header and it matches the mapped value
+				if( sHeader != null && sHeader.equals(sMap)) {
+					aFields.remove(sKey);
+				}
+			}
+		}
+		ConfigFile.clearFieldMappings(aFields);
 	}
 
 	
@@ -108,6 +132,7 @@ public class ConfigController implements TableModelListener, ActionListener {
 		ConfigFile.setInterspreadRequested( frame.isInterspreadRequested() );
 		ConfigFile.setMinK( frame.getMinK());
 		ConfigFile.setMinGroup(frame.getMinGroup());
+		ConfigFile.setUTMZone(frame.getUTMZone());
 		for( int i = 0; i < frame.getTable().getModel().getColumnCount(); i++ ) {
 			String sHeader = (String)frame.getTable().getModel().getValueAt(1,  i);
 			String sKey = (String)frame.getTable().getModel().getValueAt(0,  i);
@@ -154,12 +179,10 @@ public class ConfigController implements TableModelListener, ActionListener {
 		int iType = e.getType();
 		if( iType == TableModelEvent.UPDATE && iRow == 0 ) {
 			String sValue = (String)frame.getTable().getValueAt(iRow, iColumn);	
-			if( sValue == null || sValue.trim().length() == 0 )
-				return;
 			for( int i = 0; i < frame.getTable().getColumnCount(); i++ ) {
 				if( i != iColumn ) {
 					String sOther = (String)frame.getTable().getValueAt(0, i);
-					if( sValue != null && sValue.equals(sOther)) {
+					if( sValue != null && sValue.trim().length() > 0 && sValue.equals(sOther)) {
 						MessageDialog.messageLater(frame, "JitterDot: Duplicate Map Warning", "Warning: Column " + sValue + " is already mapped.");
 						return;
 					}
@@ -188,7 +211,6 @@ public class ConfigController implements TableModelListener, ActionListener {
 				break;
 			}
 		}
-		bMapComplete = bFoundAll;
 		String sWarnings = new String();
 		if( !frame.isInterspreadRequested() && !frame.isNAADSMRequested() ) {
 			sWarnings += "No Output Requested\n";
@@ -198,13 +220,40 @@ public class ConfigController implements TableModelListener, ActionListener {
 			sWarnings += "Column Mapping Incomplete";
 			bRunEnabled = false;
 		}
+		if( !isCoordinateMapValid(aValues) ) {
+			sWarnings += "Coordinate Mapping Incomplete";
+			bRunEnabled = false;
+		}
 		frame.setWarnings( sWarnings );		
 		frame.setRunEnabled( bRunEnabled );
+	}
+	
+	private boolean isCoordinateMapValid( List<String> aValues ) {
+		boolean bRet = false;
+		if( aValues.contains("Latitude") && aValues.contains("Longitude") )
+			bRet = true;
+		else if( aValues.contains("Northing") && aValues.contains("Easting") ) {
+			 String sZone =  frame.getUTMZone();
+			 if( sZone != null && Character.isDigit(sZone.charAt(0)) && 
+					 (sZone.toUpperCase().endsWith("N") || sZone.toUpperCase().endsWith("S")) )
+				 bRet = true;
+		}
+		return bRet;
 	}
 
 	@Override
 	public void actionPerformed(ActionEvent e) {
 		checkCompleteness();		
+	}
+
+	@Override
+	public void focusGained(FocusEvent arg0) {
+		// ignore
+	}
+
+	@Override
+	public void focusLost(FocusEvent arg0) {
+		checkCompleteness();
 	}
 	
 

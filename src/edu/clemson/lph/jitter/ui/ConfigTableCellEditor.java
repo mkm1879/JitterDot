@@ -3,6 +3,8 @@ package edu.clemson.lph.jitter.ui;
 import java.awt.Component;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
 import java.util.ArrayList;
 
 import javax.swing.AbstractCellEditor;
@@ -15,7 +17,7 @@ import javax.swing.table.TableCellEditor;
 import edu.clemson.lph.jitter.files.SourceCSVFile;
 
 @SuppressWarnings("serial")
-public class ConfigTableCellEditor extends AbstractCellEditor implements TableCellEditor {
+public class ConfigTableCellEditor extends AbstractCellEditor implements TableCellEditor, ItemListener {
     DefaultCellEditor other = new DefaultCellEditor(new JTextField());
     private DefaultCellEditor lastSelected;
 	private DefaultCellEditor combo;
@@ -33,21 +35,9 @@ public class ConfigTableCellEditor extends AbstractCellEditor implements TableCe
 			aStdCols[i] = SourceCSVFile.getStandardColumns()[i-1];
 		}
 		box = new JComboBox<String>(aStdCols);
+		box.setMaximumRowCount(SourceCSVFile.getStandardColumns().length + 1);
 		combo = new DefaultCellEditor(box);
-		box.addActionListener( new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				String sThisValue = (String)box.getSelectedItem();
-				if( sThisValue != null && !sThisValue.equals(sLastValue)) {
-					combo.stopCellEditing();
-					table.getModel().setValueAt(box.getSelectedItem(), iLastRow, iLastColumn);
-					sLastValue = sThisValue;
-				}
-				// This is a huge Kluge to force this control to give up focus so next click activates somewhere else.
-				table.selectAll();
-			}
-		});
-
+		box.addItemListener( this ); 
 	}
 
 
@@ -69,6 +59,21 @@ public class ConfigTableCellEditor extends AbstractCellEditor implements TableCe
         lastSelected = other;
         return other.getTableCellEditorComponent(table, value, isSelected, row, column);
     }
+
+
+	@Override
+	public void itemStateChanged(ItemEvent arg0) {
+		String sThisValue = (String)box.getSelectedItem();
+		if( (sLastValue != null && sThisValue == null) || 
+			(sLastValue == null && sThisValue != null) || 
+			( sLastValue != null && !sLastValue.equals(sThisValue) )) {
+			combo.stopCellEditing();
+			table.getModel().setValueAt(box.getSelectedItem(), iLastRow, iLastColumn);
+			sLastValue = sThisValue;
+		}
+		// This is a huge Kluge to force this control to give up focus so next click activates somewhere else.
+		table.selectAll();
+	}
 
 }
 
