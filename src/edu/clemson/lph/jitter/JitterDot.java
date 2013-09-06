@@ -1,23 +1,13 @@
 package edu.clemson.lph.jitter;
 
 import java.awt.EventQueue;
-import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 
-import javax.swing.JFileChooser;
 import javax.swing.UIManager;
-import javax.swing.filechooser.FileNameExtensionFilter;
 
 import edu.clemson.lph.dialogs.MessageDialog;
 import edu.clemson.lph.jitter.files.ConfigFile;
-import edu.clemson.lph.jitter.files.InvalidInputException;
-import edu.clemson.lph.jitter.files.OutputCSVFile;
-import edu.clemson.lph.jitter.files.SourceCSVFile;
-import edu.clemson.lph.jitter.geometry.InvalidCoordinateException;
 import edu.clemson.lph.jitter.logger.Loggers;
-import edu.clemson.lph.jitter.structs.WorkingData;
-import edu.clemson.lph.jitter.ui.ConfigController;
 import edu.clemson.lph.jitter.ui.ConfigFrame;
 
 public class JitterDot {
