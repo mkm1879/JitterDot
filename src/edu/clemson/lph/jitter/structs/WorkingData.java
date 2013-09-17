@@ -349,7 +349,7 @@ public class WorkingData extends ArrayList<WorkingDataRow> {
 	 * This method is much too complicated.  It involves iteration through all the rows 
 	 * then iterating through as many rows forward and backward to be sure we have found 
 	 * the K closest.  We convert this from O(n^2) to O(n) by looking at distance on the 
-	 * sorted axis (Major distance .  If we find a distance on that axis > the Kth closest 
+	 * sorted axis (Major distance).  If we find a distance on that axis > the Kth closest 
 	 * so far, we know there can be no closer points further away on this axis.  Because we
 	 * are searching both directions, we need to do this test forward and backward.  Finally,
 	 * or really first, we have to see if there really are j nodes in each direction before 
@@ -360,7 +360,6 @@ public class WorkingData extends ArrayList<WorkingDataRow> {
 	 * the set, this came to almost half the points having to compare to each point.  Making
 	 * the complexity of this step O(n^2) BY FAR the slowest step for large sets.  I had
 	 * expected the major distance short circuit to save more than that.
-	 * This doesn't max out even one CPU at least when run inside Eclipse.  Odd.
 	 * @param k this is the integer confidentiality level.
 	 */
 	private void calcDKs() {
@@ -368,51 +367,55 @@ public class WorkingData extends ArrayList<WorkingDataRow> {
 		// Wrap this in a test so we don't do over and over.
 		sortMajorAxis();
 		ArrayList<WorkingDataRow> dClosestRows = null;
-		ArrayList<Double> dClosest = null;
+		ArrayList<Double> dClosestDistances = null;
 		WorkingDataRow currentRow = null;
 		// Could potentially simplify things by extracting this loop, but it is a very small part of the complexity.
 		if( prog != null ) prog.setCurrentTask("Calculating DK for each point.");
-		long lTimeLast = System.currentTimeMillis();
 		// Used only for some profiling but incrementing a long is faster than testing to see if we need to.
+		long lTimeLast = System.currentTimeMillis();
 		long lRowsSeen = 0;
 		for( int i = 0; i < iSize; i++ ) {			
+			currentRow = get(i);
+			if( aRemovedRows.contains( currentRow ) )
+				continue;
 			if( ( i % 100 == 0 ) && prog != null ) {
 				String sRows = String.format("%,d", i);
 				prog.setCurrentTask("Calculating DK for each point. (" + sRows + " points complete.)");
-				long lTimeNow = System.currentTimeMillis();
 				// Only spend time on IO if we are asked.
 				if( ConfigFile.isDetailedLoggingRequested() ) {
+					long lTimeNow = System.currentTimeMillis();
 					System.out.println( "Row " + i + "; " + (lTimeNow - lTimeLast) + " milliseconds; " + (lRowsSeen/100) + " Avg Rows seen");
+					lTimeLast = lTimeNow;
 				}
-				lTimeLast = lTimeNow;
 				lRowsSeen = 0;
 			}
 			boolean bDone[] = {false,false};
 			dClosestRows = new ArrayList<WorkingDataRow>();
-			dClosest = new ArrayList<Double>();
-			currentRow = get(i);
+			dClosestDistances = new ArrayList<Double>();
 			for( int j = 1; j < iSize; j++ ) {
 				try {
 					WorkingDataRow nextRow = null;
 					if( ( i - j ) >= 0 && !bDone[0] ) {
 						nextRow = get( i - j );
-						if( nextRow != null && currentRow.similarTo(nextRow) ) {
-							if( dClosest.size() >= k ) {
-								Double dKCurrent =  dClosest.get(k-1);
+						if( aRemovedRows.contains( nextRow ) )
+							continue;
+						if( nextRow != null && currentRow.similarQuasiIdentifiers(nextRow) && currentRow.variesOnSensitive(nextRow) ) {
+							if( dClosestDistances.size() >= k ) {
+								Double dKCurrent =  dClosestDistances.get(k-1);
 								if( getMajorDistance( currentRow, nextRow, iSortDirection ) > dKCurrent ) {
 									bDone[0] = true;
 									if( bDone[0] && bDone[1] )
 										break;
 								}
-								// Didn't short circuit backward
+								// Didn't short circuit backward so add if in closest K
 								else {
-									checkNextRowDistance( currentRow, nextRow, dClosestRows, dClosest, k );
+									addNextRowDistance( currentRow, nextRow, dClosestRows, dClosestDistances, k );
 									lRowsSeen++;
 								}
 							}
-							// Didn't have enough to test 
+							// Didn't have enough to test for short circuit so just add
 							else {
-								checkNextRowDistance( currentRow, nextRow, dClosestRows, dClosest, k );
+								addNextRowDistance( currentRow, nextRow, dClosestRows, dClosestDistances, k );
 								lRowsSeen++;
 							}
 						}
@@ -421,23 +424,25 @@ public class WorkingData extends ArrayList<WorkingDataRow> {
 						bDone[0] = true;
 					if( ( i + j ) < iSize && !bDone[1] ) {
 						nextRow = get( i + j );
-						if( nextRow != null && currentRow.similarTo(nextRow) ) {
-							if( dClosest.size() >= k ) {
-								Double dKCurrent =  dClosest.get(k-1);
+						if( aRemovedRows.contains( nextRow ) )
+							continue;
+						if( nextRow != null && currentRow.similarQuasiIdentifiers(nextRow) && currentRow.variesOnSensitive(nextRow)  ) {
+							if( dClosestDistances.size() >= k ) {
+								Double dKCurrent =  dClosestDistances.get(k-1);
 								if( getMajorDistance( currentRow, nextRow, iSortDirection ) > dKCurrent ) {
 									bDone[1] = true;
 									if( bDone[0] && bDone[1] )
 										break;
 								}
-								// Didn't short circuit forward
+								// Didn't short circuit forward so add if in closest K
 								else {
-									checkNextRowDistance( currentRow, nextRow, dClosestRows, dClosest, k );
+									addNextRowDistance( currentRow, nextRow, dClosestRows, dClosestDistances, k );
 									lRowsSeen++;
 								}
 							}
-							// Didn't have enough to test
+							// Didn't have enough to test for short circuit so just add
 							else {
-								checkNextRowDistance( currentRow, nextRow, dClosestRows, dClosest, k );
+								addNextRowDistance( currentRow, nextRow, dClosestRows, dClosestDistances, k );
 								lRowsSeen++;
 							}
 						}
@@ -449,23 +454,18 @@ public class WorkingData extends ArrayList<WorkingDataRow> {
 					removeRow("Nonsense Jitter", currentRow);  
 				}
 			}
-			if( dClosest.size() >= k ) {
-				Double dK = dClosest.get(k-1);
+			if( dClosestDistances.size() >= k ) {
+				Double dK = dClosestDistances.get(k-1);
 				currentRow.setDK(dK);
 			}
-			else if ( dClosest != null && dClosest.size() >= k && currentRow.getAnimalType().equals("Other") ) {
-				Double dK =  dClosest.get(dClosest.size()-1);
-				currentRow.setDK(dK);
-				Loggers.getLogger().info(currentRow.getAnimalTypeIn() + " animal type using " + dClosest.size() + " closest 'Other' premises.");
-			}
+			// Because we removed all groups of less than K previously, the only way we failed is not enough variation in size
 			else {
 				Double dK = 0.0;
 				currentRow.setDK(dK);
-				Loggers.error("Not enough premises of other types to get " + k + " closest for type " + currentRow.getAnimalTypeIn());
-				removeRow("Not enough premises of type " + currentRow.getAnimalTypeIn(), currentRow);
+				Loggers.info("Not enough size variation in premises of other types to get " + k + " closest for type " + currentRow.getAnimalTypeIn());
+				removeType("Not enough size variation in premises of type " + currentRow.getAnimalTypeIn(), currentRow.getAnimalType());
 			}
-			// TODO Calculate gold standard values and write test cases!
-		}
+		} // End for each row.
 	}
 	
 	/**
@@ -473,12 +473,12 @@ public class WorkingData extends ArrayList<WorkingDataRow> {
 	 * @param currentRow
 	 * @param nextRow
 	 * @param dClosestRows
-	 * @param dClosest
+	 * @param dClosestDistances
 	 * @param k
 	 * @throws InvalidCoordinateException 
 	 */
-	private void checkNextRowDistance( WorkingDataRow currentRow, WorkingDataRow nextRow, 
-							ArrayList<WorkingDataRow> dClosestRows, ArrayList<Double> dClosest, int k ) throws InvalidCoordinateException {
+	private void addNextRowDistance( WorkingDataRow currentRow, WorkingDataRow nextRow, 
+							ArrayList<WorkingDataRow> dClosestRows, ArrayList<Double> dClosestDistances, int k ) throws InvalidCoordinateException {
 		if( currentRow == null ) {
 			Loggers.error("null currentRow passed to checkRow");
 			return;
@@ -493,17 +493,17 @@ public class WorkingData extends ArrayList<WorkingDataRow> {
 		}
 		boolean bAdded = false;
 		Double distance = getDistance(currentRow, nextRow);
-		for( int i = 0; i < dClosest.size() ; i++ ) {
-			if( distance < dClosest.get(i) ) {
+		for( int i = 0; i < dClosestDistances.size() ; i++ ) {
+			if( distance < dClosestDistances.get(i) ) {
 				dClosestRows.add(i,currentRow);
-				dClosest.add(i,distance);
+				dClosestDistances.add(i,distance);
 				bAdded = true;
 				break;
 			}
 		}
-		if( !bAdded && dClosest.size() < k ) {
+		if( !bAdded && dClosestDistances.size() < k ) {
 			dClosestRows.add(currentRow);
-			dClosest.add( distance );
+			dClosestDistances.add( distance );
 		}
 	}
 	
@@ -652,6 +652,17 @@ public class WorkingData extends ArrayList<WorkingDataRow> {
 		if( !aRemovedRows.contains(row) ) {
 			fileError.printErrorRow( sMsg, row );
 			aRemovedRows.add(row);
+		}
+	}
+	
+	private void removeType( String sMsg, String sAnimalType ) {
+		for( WorkingDataRow row : this ) {
+			if( row.getAnimalType().equals(sAnimalType) ) {
+				if( !aRemovedRows.contains(row) ) {
+					fileError.printErrorRow( sMsg, row );
+					aRemovedRows.add(row);
+				}
+			}
 		}
 	}
 	

@@ -168,7 +168,7 @@ public class ConfigFile {
 		initRead();
 		String sRet = null;
 		String sValue = props.getProperty(sKey);
-		if( sValue == null ) {
+		if( sValue == null && !sKey.equalsIgnoreCase("UTMZone") ) {
 			Loggers.getLogger().info("Cannot get value for " + sKey + " from " + sFilePath);
 		}
 		else {
@@ -217,8 +217,9 @@ public class ConfigFile {
 	 */
 	public Integer _getMinGroup() {
 		Integer iGroup = getInt("MinGroup");
-		if( iGroup == null )
-			iGroup = getMinGroup();
+		Integer iK = getMinK();
+		if( iGroup == null || iGroup < iK )
+			iGroup = iK;
 		return iGroup;
 	}
 	
@@ -243,10 +244,7 @@ public class ConfigFile {
 	public Integer _getUTMZoneNum() {
 		Integer iRet = null;
 		String sZone = getString("UTMZone");
-		if( sZone == null ) {
-			Loggers.error("Cannot get value for UTMZone from " + sFilePath);
-		}
-		else {
+		if( sZone != null ) {
 			String sZoneNum = sZone;
 			if( sZone.endsWith("S") || sZone.endsWith("N") )
 				sZoneNum = sZone.substring(0, sZone.length() - 1);
@@ -264,10 +262,7 @@ public class ConfigFile {
 	public String _getZoneHemisphere() {
 		String sRet = null;
 		String sZone = getString("UTMZone");
-		if( sZone == null ) {
-			Loggers.error("Cannot get value for UTMZone from " + sFilePath);
-		}
-		else {
+		if( sZone != null ) {
 			if( sZone.trim().endsWith("S") ) {
 				sRet = "S";
 			}

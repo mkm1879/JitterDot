@@ -124,15 +124,49 @@ public class WorkingDataRow {
 	 * @return true if the two rows match on key attributes and can therefore be pooled to make K
 	 * distinct entries.
 	 */
-	public boolean similarTo( WorkingDataRow otherRow ) {
+	public boolean similarQuasiIdentifiers( WorkingDataRow otherRow ) {
 		boolean bRet = false;
-		if( getAnimalType() == null || otherRow == null ) {
+		if( getAnimalType() == null || otherRow == null || otherRow.getAnimalType() == null ) {
 			return false;
 		}
 		if( getAnimalType().equals(otherRow.getAnimalType()) ) 
 			bRet = true;
 		return bRet;
 	}
+	
+	
+	/**
+	 * Compare rows to see if they count in dK.  Initially, only Animal Type is considered
+	 * as potentially differentiating and thus requiring different types in different K pools.
+	 * This is in a method to simplify maintenance if other attributes are determined to 
+	 * need grouping in K pools.
+	 * @param otherRow WorkingDataRow to compare with
+	 * @return true if the two rows match on key attributes and can therefore be pooled to make K
+	 * distinct entries.
+	 */
+	public boolean variesOnSensitive( WorkingDataRow otherRow ) {
+		boolean bRet = false;
+		if( getAnimals() == -1 || otherRow == null || otherRow.getAnimals() == -1 ) {
+			return true;
+		}
+		int iAnimals = getAnimals();
+		int iOtherAnimals = otherRow.getAnimals();
+		double dMax = (double)iAnimals > iOtherAnimals ? iAnimals : iOtherAnimals;
+		
+		if( Math.abs( iAnimals - iOtherAnimals ) / dMax > 0.20) 
+			bRet = true;
+		
+		/*  If the number of houses is considered sensitive data, include logic like this.
+		int iHouses = getHouses();
+		int iOtherHouses = otherRow.getHouses();
+		dMax = (double)iHouses > iOtherHouses ? iHouses : iOtherHouses;
+		
+		if( bRet && Math.abs( iHouses - iOtherHouses ) / dMax > 0.20) 
+			bRet = true;
+		*/
+		return bRet;
+	}
+
 	
 	public String[] getLine() {
 		return aLine;
