@@ -13,6 +13,8 @@ import edu.clemson.lph.jitter.ui.ConfigFrame;
 public class JitterDot {
 	// Make args available in runnable without having to subclass Thread.
 	private static String[] args;
+	private static boolean bCmd;
+	private static boolean bQuiet;
 
 	/**
 	 * @param args
@@ -45,21 +47,31 @@ public class JitterDot {
 		if( args.length > 0 ) {
 			for( String sArg : args ) {
 				if( sArg.toLowerCase().endsWith(".csv")) {
+					bCmd = true;
 					sInFile = sArg;
 				}
 				else if( sArg.toLowerCase().endsWith(".config")) {
+					bCmd = true;
 					ConfigFile.setConfigFilePath(sArg);
 				}
 				else if( sArg.toLowerCase().equals("naadsm")) {
+					bCmd = true;
 					ConfigFile.setInterspreadRequested(false);
 					ConfigFile.setNAADSMRequested(true);
 				}
 				else if( sArg.toLowerCase().startsWith("interspread")) {
+					bCmd = true;
 					ConfigFile.setNAADSMRequested(false);
 					ConfigFile.setInterspreadRequested(true);
 				}
-				else if( sArg.toLowerCase().equals("-r")) {
-					bRunNow = true;
+				else if( sArg.startsWith("-")) {
+					if( sArg.toLowerCase().contains("r")) {
+						bCmd = true;
+						bRunNow = true;
+					}
+					if( sArg.toLowerCase().contains("q")) {
+						bQuiet = true;
+					}
 				}
 				else {
 					Loggers.error("Unexpected argument '" + sArg + "' on command line");
@@ -84,6 +96,14 @@ public class JitterDot {
 				Loggers.error(e);
 			}		
 		}	
+	}
+	
+	public static boolean isCmd() {
+		return bCmd;
+	}
+	
+	public static boolean isQuiet() {
+		return bQuiet;
 	}
 	
 	public static void runJitter( String sDataFile ) {

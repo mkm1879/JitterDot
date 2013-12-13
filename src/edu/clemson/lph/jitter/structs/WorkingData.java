@@ -31,7 +31,8 @@ public class WorkingData extends ArrayList<WorkingDataRow> {
 	public static final Double MAX_LONGITUDE_DISTANCE = 45.0;
 	public static String[] aColumns;
 
-	private int k;
+	private int k;  // This is THE K in K-Anonymity.  Normally don't use single letter variable names here
+	private int iRowsPerLog = 100;
 	
 	private String sFilePath;
 	private OutputCSVFile fileError = null;
@@ -378,13 +379,13 @@ public class WorkingData extends ArrayList<WorkingDataRow> {
 			currentRow = get(i);
 			if( aRemovedRows.contains( currentRow ) )
 				continue;
-			if( ( i % 100 == 0 ) && prog != null ) {
+			if( ( i % iRowsPerLog == 0 ) && prog != null) {
 				String sRows = String.format("%,d", i);
-				prog.setCurrentTask("Calculating DK for each point. (" + sRows + " points complete.)");
+				prog.setCurrentTask("Calculating dK for each point. (" + sRows + " points complete.)");
 				// Only spend time on IO if we are asked.
 				if( ConfigFile.isDetailedLoggingRequested() ) {
 					long lTimeNow = System.currentTimeMillis();
-					System.out.println( "Row " + i + "; " + (lTimeNow - lTimeLast) + " milliseconds; " + (lRowsSeen/100) + " Avg Rows seen");
+					System.out.println( "Row " + i + "; " + (lTimeNow - lTimeLast) + " milliseconds; " + (lRowsSeen/iRowsPerLog) + " Avg Rows seen");
 					lTimeLast = lTimeNow;
 				}
 				lRowsSeen = 0;
@@ -531,6 +532,8 @@ public class WorkingData extends ArrayList<WorkingDataRow> {
 	 */
 	public void deIdentify( ProgressDialog prog ) {
 		this.prog = prog;
+		if( this.size() > 100000 )
+			iRowsPerLog = 1000;
 		setSortDirection();
 		annonymizeIntegrator();
 		aSmallGroups = getSmallGroups(k);

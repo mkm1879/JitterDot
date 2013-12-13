@@ -17,6 +17,16 @@ public class DistanceTests {
 	@Before
 	public void setUp() throws Exception {
 	}
+	
+	@Test
+	public void testMilesPerDegreeLongitude() {
+		System.out.println(Distance.milesPerDegreeLongitude(35.0));
+		assertTrue( Math.abs(Distance.milesPerDegreeLongitude(33.5) - 57.74) < LOOSE_TOLERANCE);
+		assertTrue( Math.abs(Distance.milesPerDegreeLongitude(35.0) - 56.72) < LOOSE_TOLERANCE);
+		assertTrue( Math.abs(Distance.milesPerDegreeLongitude(33.0) - 58.07) < LOOSE_TOLERANCE);
+		assertTrue( Math.abs(Distance.milesPerDegreeLongitude(34.0) - 57.41) < LOOSE_TOLERANCE);
+		assertTrue( Math.abs(Distance.milesPerDegreeLongitude(32.0) - 58.72) < LOOSE_TOLERANCE);
+	}
 
 	@Test
 	public void testGetDistance() {

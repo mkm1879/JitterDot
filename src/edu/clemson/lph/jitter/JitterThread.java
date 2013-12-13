@@ -36,9 +36,11 @@ public class JitterThread extends Thread {
 	 * Sets up ProgressDialog and then starts thread.
 	 */
 	public void runJitter() {
-		prog = new ProgressDialog(frame, "JitterDot: Progress", "Running De-identification");
-		prog.setAuto(true);
-		prog.setVisible(true);
+		if( !JitterDot.isQuiet() ) {
+			prog = new ProgressDialog(frame, "JitterDot: Progress", "Running De-identification");
+			prog.setAuto(true);
+			prog.setVisible(true);
+		}
 		// Do not allow concurrent access to mutator functions in ConfigFile during 
 		// the actual deidentification run.
 		ConfigFile.lockConfig( true );
@@ -52,7 +54,7 @@ public class JitterThread extends Thread {
 		// TODO Move this to secondary thread, add method for canceling?, add ProgressDialog and updates, fix error output now going to loggers
 		SourceCSVFile source = null;
 		try {
-			prog.setCurrentTask("Reading source data");
+			if( prog != null ) prog.setCurrentTask("Reading source data");
 			File fIn = new File( sDataFile );
 			source = new SourceCSVFile( fIn );
 			OutputCSVFile fileOut = null;
@@ -67,38 +69,63 @@ public class JitterThread extends Thread {
 				return;  // return via finally block.
 			}
 			fileOut = new OutputCSVFile( new File(sDataFile), OutputCSVFile.OutputFileType.KEY );
-			prog.setCurrentTask("Jittering Data");
+			if( prog != null ) prog.setCurrentTask("Jittering Data");
 			aData.deIdentify(prog);
-			prog.setCurrentTask("Writing Key File");
+			if( prog != null ) prog.setCurrentTask("Writing Key File");
 			fileOut.print(aData);		
 			if( ConfigFile.isNAADSMRequested() ) {
-				prog.setCurrentTask("Writing NAADSM File");
+				if( prog != null ) prog.setCurrentTask("Writing NAADSM File");
 				fileOut = new OutputCSVFile( new File(sDataFile), OutputCSVFile.OutputFileType.NAADSM );
 				fileOut.print(aData);
 			}
 			if( ConfigFile.isInterspreadRequested() ) {
-				prog.setCurrentTask("Writing InterspreadPlus File");
+				if( prog != null ) prog.setCurrentTask("Writing InterspreadPlus File");
 				fileOut = new OutputCSVFile( new File(sDataFile), OutputCSVFile.OutputFileType.INTERSPREAD );
 				fileOut.print(aData);
 			}
-			prog.setCurrentTask("Closing");
+			if( prog != null ) prog.setCurrentTask("Closing");
 			// Also closes the error file it tracks.
 			source.close();
 
 		} catch (FileNotFoundException e) {
-			e.printStackTrace();
+			if( JitterDot.isCmd() ) {
+				System.err.println( "Cannot find file " + sDataFile);
+			}
+			else {
+				e.printStackTrace();
+			}
 			Loggers.error(e);
 		} catch (IOException e) {
-			e.printStackTrace();
+			if( JitterDot.isCmd() ) {
+				System.err.println( "Cannot open file " + sDataFile);
+			}
+			else {
+				e.printStackTrace();
+			}
 			Loggers.error(e);
 		} catch (NumberFormatException e) {
-			e.printStackTrace();
+			if( JitterDot.isCmd() ) {
+				System.err.println( "Error reading file " + sDataFile);
+			}
+			else {
+				e.printStackTrace();
+			}
 			Loggers.error(e);
 		} catch (InvalidCoordinateException e) {
-			e.printStackTrace();
+			if( JitterDot.isCmd() ) {
+				System.err.println( "Invalid coordinates in file " + sDataFile);
+			}
+			else {
+				e.printStackTrace();
+			}
 			Loggers.error(e);
 		} catch (InvalidInputException e) {
-			e.printStackTrace();
+			if( JitterDot.isCmd() ) {
+				System.err.println( "Invalid input in file " + sDataFile);
+			}
+			else {
+				e.printStackTrace();
+			}
 			Loggers.error(e);
 		} catch( OutOfMemoryError ee ) {
 			MessageDialog.messageLater(frame, "JitterDot Error", "Out of memory reading dataset");
@@ -115,7 +142,7 @@ public class JitterThread extends Thread {
 				SwingUtilities.invokeAndWait(new Runnable() {
 					@Override
 					public void run() {
-						prog.setVisible(false);
+						if( prog != null ) prog.setVisible(false);
 						if( frame != null ) {
 							frame.setEditEnabled(true);
 							ConfigFile.lockConfig(false);

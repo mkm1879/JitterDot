@@ -10,14 +10,14 @@ import edu.clemson.lph.jitter.logger.Loggers;
 
 /**
  * Simple wrapper around standard Java SecureRandom class to ensure that I seed using its internal secure seed
- * and reseed every 100 values to prevent analysis of the sequence.  This is massive overkill in this project.
+ * and reseed every 1000 values to prevent analysis of the sequence.  This is massive overkill in this project.
  * @author mmarti5
  *
  */
 public class RandomNumbers {
 	private SecureRandom sr;
 	private static final int SEED_SIZE = 100;
-	private static final int MAX_NUMS = 100;
+	private static final int MAX_NUMS = 1000;
 	private int iCounter = MAX_NUMS;  // So we set seed the first time
 	
 	public RandomNumbers() {
@@ -36,7 +36,7 @@ public class RandomNumbers {
 	}
 	
 	private void seed() {
-		if( iCounter >= MAX_NUMS ) {
+		if( iCounter++ >= MAX_NUMS ) {
 			sr.setSeed(sr.generateSeed(SEED_SIZE));
 			iCounter = 0;
 		}
