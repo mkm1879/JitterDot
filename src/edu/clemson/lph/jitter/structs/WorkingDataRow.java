@@ -151,9 +151,9 @@ public class WorkingDataRow {
 		}
 		int iAnimals = getAnimals();
 		int iOtherAnimals = otherRow.getAnimals();
-		double dMax = (double)iAnimals > iOtherAnimals ? iAnimals : iOtherAnimals;
+		double dMin = (double)iAnimals < iOtherAnimals ? iAnimals : iOtherAnimals;
 		
-		if( Math.abs( iAnimals - iOtherAnimals ) / dMax > 0.20) 
+		if( Math.abs( iAnimals - iOtherAnimals ) / dMin > 0.20) 
 			bRet = true;
 		
 		/*  If the number of houses is considered sensitive data, include logic like this.
