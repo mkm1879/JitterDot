@@ -99,13 +99,11 @@ public class MillerProjectionTests {
 	}
 	@Test(expected=InvalidCoordinateException.class)
 	public void constructLow() throws InvalidCoordinateException {
-		@SuppressWarnings("unused")
-		MillerProjection project2 = new MillerProjection( -181.00 );
+		new MillerProjection( -181.00 );
 	}
 	@Test(expected=InvalidCoordinateException.class)
 	public void constructHigh() throws InvalidCoordinateException {
-		@SuppressWarnings("unused")
-		MillerProjection project2 = new MillerProjection( 181.00 );
+		new MillerProjection( 181.00 );
 	}
 
 	public MillerProjection getProjection() {

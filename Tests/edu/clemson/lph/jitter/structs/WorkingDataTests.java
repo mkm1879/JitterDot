@@ -5,7 +5,6 @@ import static org.junit.Assert.*;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.lang.reflect.Method;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -24,14 +23,18 @@ public class WorkingDataTests {
 
 	@Before
 	public void setUp() throws Exception {
-		File fileIn = new File( "TestFiles/Test.csv");
+		ConfigFile.setConfigFilePath("./JitterDot.config");
 		try {
+			System.out.println( ConfigFile.getConfigFile().getAbsolutePath() );
+			File fileIn = new File( "TestFiles/Test.csv");
 			source = new SourceCSVFile( fileIn );
 			aData = source.getData();		
 		} catch (FileNotFoundException e) {
 			fail(e.getMessage());
 		} catch (IOException e) {
 			fail(e.getMessage());
+		} catch (Exception e) {
+			e.printStackTrace();
 		}
 	}
 
@@ -103,9 +106,10 @@ public class WorkingDataTests {
 	@Test
 	public void testGetMedianLongOdd() {
 		File fileIn = new File( "TestFiles/Test2.csv");
+		WorkingData aData2 = null;
 		try {
-			source = new SourceCSVFile( fileIn );
-			WorkingData aData2 = source.getData();	
+			SourceCSVFile source2 = new SourceCSVFile( fileIn );
+			aData2 = source2.getData();	
 			aData2.setSortDirection(WorkingData.SORT_SOUTH_NORTH);
 			System.out.println("aData2.medianLong = " + aData2.getMedianLongitude());
 			assertTrue( Math.abs(aData2.getMedianLongitude() - (-81.6194) ) < TOLERANCE );
@@ -120,6 +124,7 @@ public class WorkingDataTests {
 		} catch (InvalidInputException e) {
 			fail(e.getMessage());
 		} catch (Exception e) {
+			e.printStackTrace();
 			fail(e.getMessage());
 		}
 	}

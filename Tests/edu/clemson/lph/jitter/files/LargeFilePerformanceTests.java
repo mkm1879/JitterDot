@@ -4,17 +4,12 @@ import static org.junit.Assert.*;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.lang.reflect.Method;
 
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import edu.clemson.lph.jitter.JitterDot;
 import edu.clemson.lph.jitter.geometry.Distance;
 import edu.clemson.lph.jitter.geometry.InvalidCoordinateException;
-import edu.clemson.lph.jitter.logger.Loggers;
 import edu.clemson.lph.jitter.structs.WorkingData;
 import edu.clemson.lph.jitter.structs.WorkingDataRow;
 
@@ -36,7 +31,6 @@ public class LargeFilePerformanceTests {
 		// Invoke private subroutine
 		File fileIn = new File( "TestFiles/HerdsPlus.csv");
 		ConfigFile.setConfigFilePath("TestFiles/JitterDotConfigTest.config");
-		OutputCSVFile fileError = null;
 		try {
 			source = new SourceCSVFile( fileIn );
 			aData = source.getData();	
@@ -67,14 +61,13 @@ public class LargeFilePerformanceTests {
 		System.out.println( "Average(distance - dK) = " + dSumDiffDistDK / (1.0 * aData.size() ) ); 
 		try {
 			startTime = System.currentTimeMillis();
-			OutputCSVFile fileOut = new OutputCSVFile( new File( "TestFiles/TestOutLarge.csv"), OutputCSVFile.OutputFileType.KEY );
+			OutputCSVFile fileOut = new OutputCSVFile( source, OutputCSVFile.OutputFileType.KEY );
 			fileOut.print(aData);
-			fileOut = new OutputCSVFile( new File( "TestFiles/TestOutLarge.csv"), OutputCSVFile.OutputFileType.NAADSM );
+			fileOut = new OutputCSVFile( source, OutputCSVFile.OutputFileType.NAADSM );
 			fileOut.print(aData);
-			fileOut = new OutputCSVFile( new File( "TestFiles/TestOutLarge.csv"), OutputCSVFile.OutputFileType.INTERSPREAD );
+			fileOut = new OutputCSVFile( source, OutputCSVFile.OutputFileType.INTERSPREAD );
 			fileOut.print(aData);			
 			System.out.println("print took " + (System.currentTimeMillis() - startTime ) + " milliseconds");
-			if( fileError != null ) fileError.close();
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 			fail(e.getMessage());

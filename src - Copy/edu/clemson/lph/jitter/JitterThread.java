@@ -68,19 +68,19 @@ public class JitterThread extends Thread {
 				Loggers.error("Empty Data File: " + sDataFile);
 				return;  // return via finally block.
 			}
-			fileOut = new OutputCSVFile( source, OutputCSVFile.OutputFileType.KEY );
+			fileOut = new OutputCSVFile( new File(sDataFile), OutputCSVFile.OutputFileType.KEY );
 			if( prog != null ) prog.setCurrentTask("Jittering Data");
 			aData.deIdentify(prog);
 			if( prog != null ) prog.setCurrentTask("Writing Key File");
 			fileOut.print(aData);		
 			if( ConfigFile.isNAADSMRequested() ) {
 				if( prog != null ) prog.setCurrentTask("Writing NAADSM File");
-				fileOut = new OutputCSVFile( source, OutputCSVFile.OutputFileType.NAADSM );
+				fileOut = new OutputCSVFile( new File(sDataFile), OutputCSVFile.OutputFileType.NAADSM );
 				fileOut.print(aData);
 			}
 			if( ConfigFile.isInterspreadRequested() ) {
 				if( prog != null ) prog.setCurrentTask("Writing InterspreadPlus File");
-				fileOut = new OutputCSVFile( source, OutputCSVFile.OutputFileType.INTERSPREAD );
+				fileOut = new OutputCSVFile( new File(sDataFile), OutputCSVFile.OutputFileType.INTERSPREAD );
 				fileOut.print(aData);
 			}
 			if( prog != null ) prog.setCurrentTask("Closing");

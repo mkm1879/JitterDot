@@ -23,13 +23,18 @@ public class SourceCSVFile {
 	private LabeledCSVParser parser = null;
 	private String aColumns[];
 	private int iRows;
-	private OutputCSVFile fileError = null;
+	private OutputCSVFile fileError;
 	
 	public SourceCSVFile( File fIn ) throws FileNotFoundException, IOException {
 		fInput = fIn;
 		iRows = getRowCount(fIn);
 		parser = new LabeledCSVParser( new FileInputStream( fInput ) );
 		aColumns = parser.getLabels();
+		WorkingData.setColumns(aColumns);
+//		String sFilePath = fIn.getPath();
+//		String sErrorPath = sFilePath.substring(0, sFilePath.lastIndexOf(".")) + "ERRORS.txt";
+//		fileError = new OutputCSVFile( new File(sErrorPath), OutputCSVFile.OutputFileType.ERROR );
+		fileError = new OutputCSVFile( fIn, OutputCSVFile.OutputFileType.ERROR );
 	}
 	
 	public static String[] getStandardColumns() {
@@ -45,11 +50,6 @@ public class SourceCSVFile {
 		return aColumns;
 	}
 	
-	public String getPath() {
-		if( fInput == null ) return null;
-		return fInput.getAbsolutePath();
-	}
-	
 	/**
 	 * This is the guts of the Source File implementation.  Take the parser and read all the rows into 
 	 * instances of our data structure working data.
@@ -61,8 +61,7 @@ public class SourceCSVFile {
 	 * @throws InvalidInputException For any row that lacks valid data for any required field.
 	 */
 	public WorkingData getData() throws IOException, NumberFormatException, InvalidCoordinateException, InvalidInputException {
-		WorkingData aData = new WorkingData( this );
-		fileError = aData.getErrorFile();
+		WorkingData aData = new WorkingData( fInput.getPath(), fileError );
 		aData.setRows(iRows);
 		String aLine[] = null;
 		while( (aLine = parser.getLine()) != null ) {
@@ -213,8 +212,7 @@ public class SourceCSVFile {
 	 * Close the underlying file and flush data.
 	 */
 	public void close() {
-		if( fileError != null )
-			fileError.close();
+		fileError.close();
 		parser.close();
 	}
 	

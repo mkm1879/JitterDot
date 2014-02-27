@@ -22,19 +22,17 @@ public class OutputCSVFile {
 	private final static String aColNamesINTERSPREAD[] = {"HerdID","HerdSize","Houses","AnimalType","Integrator",
         "Easting", "Northing", "UTMZone", "Status","DaysInState","DaysLeftInState"};
 	private String aColNames[];
-	private SourceCSVFile fInput = null;
 	private String sFilePath;
 	
 	
-	public OutputCSVFile( SourceCSVFile fIn, OutputFileType type ) throws FileNotFoundException {
+	public OutputCSVFile( File fIn, OutputFileType type ) throws FileNotFoundException {
 		this.type = type;
-		fInput = fIn;
-		sFilePath = fInput.getPath();
+		sFilePath = fIn.getPath();
 		initCols();
 	}
 	
 	private void initCols() {
-		if( aColNames == null && fInput.getColumns() != null ) {
+		if( aColNames == null && WorkingData.aColumns != null ) {
 			sFilePath = sFilePath.substring(0, sFilePath.lastIndexOf('.'));
 			switch( type ) {
 			case KEY:
@@ -54,10 +52,10 @@ public class OutputCSVFile {
 				// Because some errors are bad enough we never construct a WorkingDataRow
 				// we use the column structure from the source with the addition of 
 				// a column for the type of error.
-				aColNames = new String[fInput.getColumns().length + 1];
+				aColNames = new String[WorkingData.aColumns.length + 1];
 				aColNames[0] = "Error Type";
-				for( int i = 1; i <= fInput.getColumns().length; i++ )
-					aColNames[i] = fInput.getColumns()[i-1];
+				for( int i = 1; i <= WorkingData.aColumns.length; i++ )
+					aColNames[i] = WorkingData.aColumns[i-1];
 				break;
 			} 
 			try {
@@ -77,7 +75,7 @@ public class OutputCSVFile {
 		close();
 	}
 	
-	private void printRow( WorkingDataRow row ) {
+	public void printRow( WorkingDataRow row ) {
 		initCols();
 		if( type.equals(OutputFileType.KEY) )
 			print(row.getOriginalKey());

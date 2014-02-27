@@ -1,1 +1,7 @@
 JitterDot Map Dot Jittering for Epi Modeling
+
+Dependencies:
+	Java JDK 1.6 or higher
+	JUnit4 JAR File at: https://github.com/junit-team/junit/wiki/Download-and-Install
+	Apache Log4J JAR File (in archive) at:  http://logging.apache.org/log4j/1.2/
+	Proj4J  Source at: http://svn.osgeo.org/metacrs/proj4j (Includes Ant and Maven build files)

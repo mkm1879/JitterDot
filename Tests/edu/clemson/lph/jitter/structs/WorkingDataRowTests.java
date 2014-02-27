@@ -7,7 +7,8 @@ import java.io.File;
 import org.junit.Before;
 import org.junit.Test;
 
-import edu.clemson.lph.jitter.files.OutputCSVFile;
+import edu.clemson.lph.jitter.files.ConfigFile;
+import edu.clemson.lph.jitter.files.SourceCSVFile;
 import edu.clemson.lph.jitter.geometry.InvalidCoordinateException;
 import edu.clemson.lph.jitter.structs.WorkingDataRow;
 
@@ -16,18 +17,24 @@ public class WorkingDataRowTests {
 	
 	@Before
 	public void setUp() throws Exception {
-		OutputCSVFile fError = new OutputCSVFile( new File("TestFiles/TestERRORS.csv"), OutputCSVFile.OutputFileType.ERROR);
-		data = new WorkingData( "TestFiles/Test.csv", fError );
-		data.setRows(100);  // this is silly just make sure we have enough keys for testing.
-		double dLat = 34.1;
-		double dLong = -81.9;
-		double dDelta = 0.5;
-		for( int i = 5; i > 0; i-- ) {
-			WorkingDataRow dNew = new WorkingDataRow( new String[] {"Farm","dlat","dlong","Antype"}, "Farm" + i, dLat, dLong, "Animal Type");
-			dNew.setIntegratorIn("A Farms");
-			data.add(dNew);
-			dLat += dDelta;
-			dLong += dDelta;
+		ConfigFile.setConfigFilePath("./JitterDot.config");
+		try {
+			SourceCSVFile source = new SourceCSVFile( new File("TestFiles/Test.csv"));
+			data = new WorkingData(source);
+			data.setRows(100);  // this is silly just make sure we have enough keys for testing.
+			double dLat = 34.1;
+			double dLong = -81.9;
+			double dDelta = 0.5;
+			for( int i = 5; i > 0; i-- ) {
+				WorkingDataRow dNew = new WorkingDataRow( new String[] {"Farm","dlat","dlong","Antype"}, "Farm" + i, dLat, dLong, "Animal Type");
+				dNew.setIntegratorIn("A Farms");
+				data.add(dNew);
+				dLat += dDelta;
+				dLong += dDelta;
+			}
+		} catch( Exception e ) {
+			e.printStackTrace();
+			throw( e );
 		}
 	}
 

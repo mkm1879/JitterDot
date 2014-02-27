@@ -1,6 +1,5 @@
 package edu.clemson.lph.jitter.structs;
 
-import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -16,7 +15,6 @@ import org.apache.log4j.Level;
 import edu.clemson.lph.dialogs.ProgressDialog;
 import edu.clemson.lph.jitter.files.ConfigFile;
 import edu.clemson.lph.jitter.files.OutputCSVFile;
-import edu.clemson.lph.jitter.files.SourceCSVFile;
 import edu.clemson.lph.jitter.geometry.Distance;
 import edu.clemson.lph.jitter.geometry.InvalidCoordinateException;
 import edu.clemson.lph.jitter.geometry.InvalidUTMZoneException;
@@ -33,8 +31,7 @@ public class WorkingData extends ArrayList<WorkingDataRow> {
 	public static final int SORT_WEST_EAST = 1;
 	public static final Double SQRT2 = Math.sqrt(2.0);
 	public static final Double MAX_LONGITUDE_DISTANCE = 45.0;
-	
-	public String[] aColumns;
+	public static String[] aColumns;
 
 	private int k;  // This is THE K in K-Anonymity.  Normally don't use single letter variable names here
 	private int iRowsPerLog = 100;
@@ -46,7 +43,7 @@ public class WorkingData extends ArrayList<WorkingDataRow> {
 	private int iCurrentSort = SORT_NONE;
 	private int iNextKey = 0;
 	private ArrayList<Integer> randInts;
-	private ArrayList<String> aSmallGroups = null;
+	ArrayList<String> aSmallGroups = null;
 	private int iRows = 10000;
 	private Double dMinLong = null;
 	private Double dMaxLong = null;
@@ -58,21 +55,14 @@ public class WorkingData extends ArrayList<WorkingDataRow> {
 	
 	private ArrayList<WorkingDataRow> aRemovedRows = new ArrayList<WorkingDataRow>();
 	
-	/**
-	 * Construct an empty WorkingData from source.  Only called by directly by unit tests.
-	 * Correct usage is WorkingData data = source.getData();
-	 * @param source SourceCSVFile from which to initialize the data structures.
-	 * @throws FileNotFoundException
-	 */
-	public WorkingData( SourceCSVFile source ) throws FileNotFoundException {
-		this.fileError = new OutputCSVFile( source, OutputCSVFile.OutputFileType.ERROR );
-		this.sFilePath = source.getPath();
-		this.aColumns = source.getColumns();
+	public WorkingData( String sFilePath, OutputCSVFile fileError ) {
+		this.fileError = fileError;
+		this.sFilePath = sFilePath;
 		k = ConfigFile.getMinK();
 	}
 	
-	public OutputCSVFile getErrorFile() {
-		return fileError;
+	public static void setColumns( String[] aColumns) {
+		WorkingData.aColumns = aColumns;
 	}
 	
 	@Override
