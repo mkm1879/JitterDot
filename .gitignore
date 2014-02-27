@@ -13,6 +13,14 @@ lib
 *.xlsx
 *.config
 *.txt
+*.config
+.classpath
+.project
+*.sh
+*.bat
+*.ini
+*.temp
+srcCopy/*
 TestFiles/*
 
 
