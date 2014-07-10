@@ -1,0 +1,19 @@
+<project default="compile">
+    <property name="jar.class.path" value="log4j.jar proj4j.jar"/>
+	<target name="prepare">
+        <mkdir dir="bin"/>
+    </target>
+    <target name="compile" depends="prepare">
+        <mkdir dir="bin"/>
+        <javac classpath="log4j.jar;proj4j.jar" srcdir="src" destdir="bin"/>
+    </target>
+	<target name="jar" depends="compile" description="Generates executable jar file">
+        <jar jarfile="JitterDot.jar">
+            <manifest>
+                <attribute name="Main-Class" value="edu.clemson.lph.jitter.JitterDot"/>
+                <attribute name="Class-Path" value="${jar.class.path}"/>
+            </manifest>
+            <fileset dir="bin" includes="**/*.class"/>            
+        </jar>
+    </target>
+</project>

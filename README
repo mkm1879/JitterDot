@@ -1,7 +1,17 @@
-JitterDot Map Dot Jittering for Epi Modeling
+JitterDot Map Dot De-identification for Epi Modeling
 
 Dependencies:
 	Java JDK 1.6 or higher
-	JUnit4 JAR File at: https://github.com/junit-team/junit/wiki/Download-and-Install
+	JUnit4 JAR File at: https://github.com/junit-team/junit/wiki/Download-and-Install (Only needed for testing)
 	Apache Log4J JAR File (in archive) at:  http://logging.apache.org/log4j/1.2/
 	Proj4J  Source at: http://svn.osgeo.org/metacrs/proj4j (Includes Ant and Maven build files)
+
+How to build:
+The simplest way to build the executable jar file for this project is with Apache Ant.  build.xml is included here.
+Place the src folder, build.xml, proj4j.jar, log4j.jar, and JitterDot.config in a folder open a command prompt in that folder and run ant:
+> ant jar
+will build the executable jar file.
+
+Alternatively open an IDE such as Eclipse, create a project with src and Test source folder and proj4j.jar and log4j.jar in the libraries. Make sure log4j.jar, proj4j.jar and JitterDot.MF and JitterDot.config are in the project folder. Edit and compile.  
+The jar file can be built by opening a command prompt in the output folder and executing
+> jar -cfm ..\JitterDot.jar ..\JitterDot.MF edu\clemson\lph edu\clemson\lph\jitter edu\clemson\lph\security edu\clemson\lph\controls edu\clemson\lph\dialogs

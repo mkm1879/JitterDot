@@ -22,5 +22,7 @@ lib
 *.temp
 srcCopy/*
 TestFiles/*
+!license.txt
+!LGPL.txt
 
 
