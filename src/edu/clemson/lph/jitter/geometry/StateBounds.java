@@ -6,8 +6,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
 
-public class StateBounds {
-	private static final double TOLERANCE = 0.5;
+public class StateBounds extends Bounds {
 	private static HashMap<String, Coords> map;
 	private String sState = null;
 	private List<String> aStates = null;

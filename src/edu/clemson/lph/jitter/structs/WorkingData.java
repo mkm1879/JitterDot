@@ -17,6 +17,7 @@ import edu.clemson.lph.dialogs.ProgressDialog;
 import edu.clemson.lph.jitter.files.ConfigFile;
 import edu.clemson.lph.jitter.files.OutputCSVFile;
 import edu.clemson.lph.jitter.files.SourceCSVFile;
+import edu.clemson.lph.jitter.geometry.Bounds;
 import edu.clemson.lph.jitter.geometry.Distance;
 import edu.clemson.lph.jitter.geometry.InvalidCoordinateException;
 import edu.clemson.lph.jitter.geometry.InvalidUTMZoneException;
@@ -327,25 +328,39 @@ public class WorkingData extends ArrayList<WorkingDataRow> {
 
 		boolean bHasStates = false;
 		List<String> selectedStates = ConfigFile.getStates();
-		if( selectedStates != null )
+		Bounds bounds = null;
+		if( selectedStates != null && selectedStates.size() > 0 ) {
 			bHasStates = true;
-		Set<String> states = StateBounds.getStates();
-		StateBounds bounds = null;
-		for( String sState : selectedStates ) {
-			if( !states.contains(sState) ) {
-				Loggers.error( "State " + sState + " not found");
-				bHasStates = false;
-				break;
+			Set<String> states = StateBounds.getStates();
+			for( String sState : selectedStates ) {
+				if( !states.contains(sState) ) {
+					Loggers.error( "State " + sState + " not found");
+					bHasStates = false;
+					break;
+				}
+			}
+			if( bHasStates ) {
+				bounds = new StateBounds( selectedStates );
 			}
 		}
-		if( bHasStates ) {
-			bounds = new StateBounds( selectedStates );
+		else if ( ConfigFile.getMinLatitude() != null && ConfigFile.getMaxLatitude() != null 
+				&& ConfigFile.getMinLongitude() != null && ConfigFile.getMaxLatitude() != null ) {
+			bounds = new Bounds( ConfigFile.getMinLatitude(), 
+								 ConfigFile.getMaxLatitude(), 
+								 ConfigFile.getMinLongitude(), 
+								 ConfigFile.getMaxLongitude() );
+			System.out.println( "MinLat = " + ConfigFile.getMinLatitude() + " MaxLat = "+ ConfigFile.getMaxLatitude() 
+					+ " MinLong = "+ ConfigFile.getMinLongitude() + " MaxLong = "+ConfigFile.getMaxLongitude() );
+
 		}
 		for( WorkingDataRow row : this ) {
 			if( bounds != null ) {
 				if( row.getLongitudeIn() < bounds.getMinLong() || row.getLongitudeIn() > bounds.getMaxLong() ||
 						 row.getLatitudeIn() < bounds.getMinLat() || row.getLatitudeIn() > bounds.getMaxLat() ) {
-					Loggers.error( "Coordinate outside state bounds (" + row.getLongitudeIn() + ", " + row.getLatitudeIn() + " in row " + row.getOriginalKey() );
+					if( bHasStates )
+						Loggers.error( "Coordinate outside state bounds (" + row.getLongitudeIn() + ", " + row.getLatitudeIn() + " in row " + row.getOriginalKey() );
+					else	
+						Loggers.error( "Coordinate outside bounds (" + row.getLongitudeIn() + ", " + row.getLatitudeIn() + " in row " + row.getOriginalKey() );
 					removeRow("Coordinate Outside State Bounds", row);			
 				}
 			}

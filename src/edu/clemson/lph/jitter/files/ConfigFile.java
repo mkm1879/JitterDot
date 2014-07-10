@@ -126,7 +126,7 @@ public class ConfigFile {
 				aRet.add(sNext.trim());
 			}
 		}
-		else if( sValue != null ) 
+		else if( sValue != null && sValue.trim().length() > 0 ) 
 			aRet.add(sValue);
 		return aRet;
 	}
@@ -199,6 +199,39 @@ public class ConfigFile {
 		_setValue("States", sb.toString(), "Geography");
 	}
 	
+	/**
+	 * Get the minimum value of Longitude.
+	 * @return minimum Longitude in bounds
+	 */
+	public Double _getMinLongitude() {
+		return getDouble("MinLongitude");
+	}
+	
+	/**
+	 * Get the maximum value of Longitude.
+	 * @return maximum Longitude in bounds
+	 */
+	public Double _getMaxLongitude() {
+		return getDouble("MaxLongitude");
+	}
+
+	
+	/**
+	 * Get the minimum value of Latitude.
+	 * @return minimum Latitude in bounds
+	 */
+	public Double _getMinLatitude() {
+		return getDouble("MinLatitude");
+	}
+	
+	/**
+	 * Get the maximum value of Latitude.
+	 * @return maximum Latitude in bounds
+	 */
+	public Double _getMaxLatitude() {
+		return getDouble("MaxLatitude");
+	}
+
 	/**
 	 * Get the value of K in our privacy setting.
 	 * @return minimum K anonymity required
@@ -579,6 +612,10 @@ public class ConfigFile {
 	public static void lockConfig( boolean bLocked ) { singleton._lockConfig( bLocked ); }
 	public static List<String> getStates() { return singleton._getStates(); }
 	public static void setStates( List<String> aStates ) { singleton._setStates(aStates); }
+	public static Double getMinLongitude() { return singleton._getMinLongitude(); }
+	public static Double getMaxLongitude() { return singleton._getMaxLongitude(); }
+	public static Double getMinLatitude() { return singleton._getMinLatitude(); }
+	public static Double getMaxLatitude() { return singleton._getMaxLatitude(); }
 	public static Integer getMinK() { return singleton._getMinK(); }
 	public static void setMinK( Integer iMinK ) { singleton._setMinK(iMinK); }
 	public static Integer getMinGroup() { return singleton._getMinGroup(); }
